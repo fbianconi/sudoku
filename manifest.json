@@ -1,0 +1,14 @@
+{
+    "name": "Ba5na Sudoku",
+    "short_name": "Sudoku",
+    "theme_color": "#f3db21",
+    // "background_color": "#fff183",
+    "display": "standalone",
+    "scope": "/sudoku/",
+    "start_url": "/sudoku/index.html",
+    "icons": [
+        {
+            "src" : "/img/icon.svg"
+        }
+    ]
+}

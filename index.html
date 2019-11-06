@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel='manifest' href='manifest.json' />
+        <script src="src/vue.js"></script>
+	    <link rel="stylesheet" type="text/css" href="css/style.css">     
+    </head>
+    <body>
+        <div id="sudoku-game">
+            <div v-if="showmenu" id="menu">
+                <div class="center">
+                    <header>BA5NA Sudoku</header>
+                    <a :disabled="cantResume" id="resume" v-on:click="showmenu = false" >Resume</a>
+                    <a :disabled="cantReset" id="reset" v-on:click="reset" >Restart</a>
+                    <div class="frame center">
+                        <header>New Game</header>
+                        <a id="startEasy" v-on:click="newGame(30)" >Easy</a>
+                        <a id="startMedium" v-on:click="newGame(40)" >Medium</a>
+                        <a id="startHard" v-on:click="newGame(80)" >Hard</a>
+                    </div>
+                </div>
+            </div>
+	        <div id="board">
+                <div v-for="(item, i) in databoard"
+                     :data-index="i" :data-col="column(i)" :data-row="row(i)" :data-grp="group(i)"
+                     :class="{highlighted: selected==item, default: begin[i]==item }"
+                     v-on:click="play">
+                    {{ isValid(item)? item : "" }}
+                </div>
+            </div>
+            <div id="controls">
+                <div v-for="n in 9"
+                     class="number"
+                     :class="{selected: selected==n, done: isFull(n)}"
+                     v-on:click="select(n)" >{{n}}
+                </div>
+
+                <div id="clearSelect">&#9747;</div>
+
+                <div id="undo">&#11178;</div>
+                <div id="redo">&#11179;</div>
+                <div v-on:click="annotate = !annotate" >{{ annotate? "&#9999;" : "&#10002;" }}</div>
+                <div id="menuBtn" v-on:click="showmenu = !showmenu" >Menu</div>
+                
+            </div>
+        </div>
+        <div id="adsense"></div>
+        <script src="src/main.js" type="text/x-ecmascript"></script>
+    </body>
+</html>
