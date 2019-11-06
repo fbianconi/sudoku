@@ -2,7 +2,8 @@
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel='manifest' href='manifest.json' />
-        <script src="src/vue.js"></script>
+        <!-- <script src="src/vue.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	    <link rel="stylesheet" type="text/css" href="css/style.css">     
     </head>
     <body>
@@ -17,7 +18,7 @@
                         <a id="startEasy" v-on:click="newGame(30)" >Easy</a>
                         <a id="startMedium" v-on:click="newGame(40)" >Medium</a>
                         <a id="startHard" v-on:click="newGame(80)" >Hard</a>
-                    </div>
+                    </details>
                 </div>
             </div>
 	        <div id="board">
