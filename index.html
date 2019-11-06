@@ -12,8 +12,8 @@
                     <header>BA5NA Sudoku</header>
                     <a :disabled="cantResume" id="resume" v-on:click="showmenu = false" >Resume</a>
                     <a :disabled="cantReset" id="reset" v-on:click="reset" >Restart</a>
-                    <div class="frame center">
-                        <header>New Game</header>
+                    <details class="frame center">
+                        <summary>New Game</summary>
                         <a id="startEasy" v-on:click="newGame(30)" >Easy</a>
                         <a id="startMedium" v-on:click="newGame(40)" >Medium</a>
                         <a id="startHard" v-on:click="newGame(80)" >Hard</a>

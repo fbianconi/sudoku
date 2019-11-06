@@ -28,7 +28,7 @@ body{
 }
 
 .center>*{
-    display: inline-block;
+    display: block;
     padding: 1em 2em;
     margin:3px;
     text-align: center;
@@ -37,9 +37,14 @@ body{
     border-radius: .3em;
 }
 #menu header{
-    padding:1em 2em;
-    background: #eee;
-    color: #222;
+    padding: .5em;
+    border: none;
+    font-size: x-large;
+    font-weight: 900;
+}
+#menu summary{
+    padding: 0;
+    border: none;
 }
 
 

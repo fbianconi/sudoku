@@ -25,7 +25,7 @@ var app=new Vue({
             this.seed=~~(Math.random()*Number.MAX_SAFE_INTEGER)
         }
         if (ls.game){
-            let game = ls.game
+            let game = JSON.parse(ls.game)
             this.databoard=game.databoard
             this.begin=game.begin
             this.undoStack=game.undoStack
