@@ -5,7 +5,7 @@
     // "background_color": "#fff183",
     "display": "standalone",
     "scope": "/sudoku/",
-    "start_url": "/sudoku/index.html",
+    "start_url": "/sudoku/",
     "icons": [
         {
             "src" : "/img/icon.svg"
