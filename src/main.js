@@ -91,7 +91,7 @@ function put(board, index, value, helpAllowed){
     //put a value to the board if the state admits it, or if help is disabled
     //tile should contain an array of possible values; or a number if it's been filled
 
-    if (!helpAllowed && (!board[index] || !board[index].has || !board[index].has(value))) return false;
+    if (helpAllowed && (!board[index] || !board[index].has || !board[index].has(value))) return false;
 
     let col = index % 9
     let row = ~~(index / 9)

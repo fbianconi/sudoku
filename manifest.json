@@ -1,5 +1,5 @@
 {
-    "name": "Ba5na Sudoku",
+    "name": "BA5NA Sudoku",
     "short_name": "Sudoku",
     "theme_color": "#f3db21",
     "background_color": "#f3db21",
@@ -8,9 +8,19 @@
     "start_url": "/sudoku/",
     "icons": [
         {
-            "48" : "img/icon.svg",
-            "96" : "img/icon.svg",
-            "192" : "img/icon.svg",
+            "src": "/sudoku/img/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/sudoku/img/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src" : "img/icon.svg",
+            "type": "image/svg+xml",
+            "sizes": "16x16 24x24 32x32 48x48 64x64 128x128 144x144 192x192 512x512"
         }
     ]
 }
