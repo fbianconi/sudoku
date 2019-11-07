@@ -9,8 +9,8 @@
     "icons": [
         {
             "48" : "img/icon.svg",
-            "96" : "img/icon.svg"
-            "192" : "img/icon.svg"
+            "96" : "img/icon.svg",
+            "192" : "img/icon.svg",
         }
     ]
 }
