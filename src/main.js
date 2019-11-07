@@ -32,33 +32,31 @@ var app=new Vue({
         }
     },
     methods: {
-        group:function(n){
-            let gx = ~~(n/3)%3
-            let gy = ~~(n/27)
-            return (gx+ 3*gy)+1
-        },
-        column:function(n){return n % 9+1},
-        row:function(n){return ~~(n / 9)+1},
-        select:function(n){this.selected=n},
+        group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 },
+        column(n){return n % 9+1},
+        row(n){return ~~(n / 9)+1},
+        select(n){this.selected=n},
         isValid: isValid,
-        reset: function(){
-            this.databoard= Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] ))
-            for (let i =0;i<81;i++){
-                put(this.databoard, i, this.begin[i])
+        resume(){if (!this.cantResume) this.showmenu=false },
+        reset(){
+            if (!this.cantReset){
+                this.databoard= Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] ))
+                for (let i =0;i<81;i++){
+                    if (isValid(this.begin[i]))put(this.databoard, i, this.begin[i])
+                }
+                this.showmenu=false
             }
-            this.showmenu=false
-        },
-        canResume:function(){
-            return true
         },
         newGame:function (n){
-            this.canResume=true;
+            this.cantResume=false;
             this.startTime=new Date() //TODO: implement pauses
             this.selected=null;
             this.databoard=newBoard(n)
             this.begin=this.databoard.map( (x)=> (isValid(x) ? x : "" ) )
             this.showmenu=false
             this.finished=null
+            this.$refs.newGameSummary.click()
+            
         },
         isFull: function(n){return 9==this.databoard.reduce( (count,x)=>count+(x==n), 0); },
         play:function(e){
@@ -71,7 +69,7 @@ var app=new Vue({
                 }else if (e.target.innerHTML != '' ){
                     remove(this.databoard, i)
                     put(this.databoard, i, sel, this.helpAllowed)
-                    this.canReset=true
+                    this.cantReset=false
                 }
                 this.selected=sel
             }

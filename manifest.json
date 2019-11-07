@@ -18,9 +18,9 @@
             "type": "image/png"
         },
         {
-            "src" : "img/icon.svg",
+            "src" : "/sudoku/img/icon.svg",
             "type": "image/svg+xml",
-            "sizes": "16x16 24x24 32x32 48x48 64x64 128x128 144x144 192x192 512x512"
+            "sizes": "16x16 24x24 32x32 48x48 64x64 128x128 144x144"
         }
     ]
 }

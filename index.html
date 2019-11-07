@@ -3,7 +3,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel='manifest' href='manifest.json' />
         <script src="src/vue.js"></script>
-        <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
 	    <link rel="stylesheet" type="text/css" href="css/style.css">
 
         <link rel="apple-touch-icon" sizes="180x180" href="/sudoku/img/apple-touch-icon.png">
@@ -18,19 +17,27 @@
     </head>
     <body>
         <div id="sudoku-game">
-            <div v-if="showmenu" id="menu">
+            <div :class="{hide: !showmenu }" id="menu">
                 <div class="center">
                     <header>BA5NA Sudoku</header>
-                    <a :disabled="cantResume" id="resume" v-on:click="showmenu = false" >Resume</a>
-                    <a :disabled="cantReset" id="reset" v-on:click="reset" >Restart</a>
+                    <a :class="{disabled: cantResume}" id="resume" v-on:click="resume" >Continue</a>
+                    <a :class="{disabled: cantReset}" id="reset" v-on:click="reset" >Restart</a>
                     <details class="frame center">
-                        <summary>New Game</summary>
+                        <summary ref="newGameSummary">New Game</summary>
                         <a id="startEasy" v-on:click="newGame(30)" >Easy</a>
                         <a id="startMedium" v-on:click="newGame(40)" >Medium</a>
                         <a id="startHard" v-on:click="newGame(80)" >Hard</a>
                     </details>
+                    <a id="options" v-on:click=" "> Options </a>
                 </div>
             </div>
+            <!-- <div :class="{hide: !showoptions }" id="optionsmenu">
+                 <div class="center">
+                 <header>Options</header>
+                 <a id="saveoptions" v-on:click="saveOptions"> Save </a>
+                 </div>
+                 </div> -->
+            
 	        <div id="board">
                 <div v-for="(item, i) in databoard"
                      :data-index="i" :data-col="column(i)" :data-row="row(i)" :data-grp="group(i)"
@@ -45,12 +52,12 @@
                      :class="{selected: selected==n, done: isFull(n)}"
                      v-on:click="select(n)" >{{n}}
                 </div>
-
-                <div id="clearSelect">&#9747;</div>
-
-                <div id="undo">&#11178;</div>
-                <div id="redo">&#11179;</div>
-                <div v-on:click="annotate = !annotate" >{{ annotate? "&#9999;" : "&#10002;" }}</div>
+                <!--
+                     <div id="clearSelect">&#9747;</div>
+                     <div id="undo">&#11178;</div>
+                     <div id="redo">&#11179;</div>
+                     <div v-on:click="annotate = !annotate" >{{ annotate? "&#9999;" : "&#10002;" }}</div>
+                -->
                 <div id="menuBtn" v-on:click="showmenu = !showmenu" >Menu</div>
                 
             </div>

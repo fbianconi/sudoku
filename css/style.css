@@ -10,15 +10,23 @@ body{
     background:#f3db21;
     color:#111;
     position: absolute;
+    left: 0;
     width: 100vw;
     height: 100vh;
     display:flex;
+    transition: left .5s;
+}
+#menu.hide{
+    left:-100vw;
 }
 .center{
     display:flex !important;
     flex-direction:column;
     align-content:center;
     justify-content:center;
+}
+.disabled{
+    color:grey;
 }
 
 #menu>div{
@@ -45,6 +53,7 @@ body{
 #menu summary{
     padding: 0;
     border: none;
+    outline: none;
 }
 
 
