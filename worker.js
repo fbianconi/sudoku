@@ -1,9 +1,11 @@
 
 var CACHE_NAME = 'sudoku-v1';
 var urlsToCache = [
-    '/',
-    '/css/style.css',
-    '/src/main.js'
+    'index.html',
+    'css/style.css',
+    'src/main.js',
+    'src/vue.js',
+    'img/icon.svg'
 ];
 
 self.addEventListener('install', function(event) {
