@@ -6,17 +6,22 @@ var app=new Vue({
     el:"#sudoku-game",
     data:{
         showmenu: true,
-        cantResume: true,
-        cantReset: true,
+        canResume: false,
+        canReset: false,
         databoard: Array(81).fill(0),
+        //Tile: {value:"", default:bool, possibles:Set, notes:Set, }
+        /*Pros and cons of tile objects: reset is more complex, */
         begin:[],
-        undoStack: [],
+        undoStack:[],
         selected:null,
         annotate:false,
+        focused:null,
         seed:0,
         startTime:null,
-        finished:null,
+        pausedTime:null,
+        finishedTime:null,
         helpAllowed:true,
+        digitFirst:true,
     },
     created(){
         if (ls.seed){
@@ -37,10 +42,11 @@ var app=new Vue({
         row(n){return ~~(n / 9)+1},
         select(n){this.selected=n},
         isValid: isValid,
-        resume(){if (!this.cantResume) this.showmenu=false },
+        resume(){if (this.canResume) this.showmenu=false },
         reset(){
-            if (!this.cantReset){
-                this.databoard= Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] ))
+            if (this.canReset){
+                //oh! empty board... you're so full of possibilities...
+                this.databoard= Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9]))
                 for (let i =0;i<81;i++){
                     if (isValid(this.begin[i]))put(this.databoard, i, this.begin[i])
                 }
@@ -48,7 +54,7 @@ var app=new Vue({
             }
         },
         newGame:function (n){
-            this.cantResume=false;
+            this.canResume=true;
             this.startTime=new Date() //TODO: implement pauses
             this.selected=null;
             this.databoard=newBoard(n)
@@ -69,7 +75,7 @@ var app=new Vue({
                 }else if (e.target.innerHTML != '' ){
                     remove(this.databoard, i)
                     put(this.databoard, i, sel, this.helpAllowed)
-                    this.cantReset=false
+                    this.canReset=true
                 }
                 this.selected=sel
             }
