@@ -94,8 +94,23 @@ var app=new Vue({
         },
         
         undo(){
-            let undo = this.undoList[--this.undoIndex]
-            console.log(undo)
+            if (this.undoIndex>0){
+                let undo = this.undoList[--this.undoIndex]
+                if (undo && this.isValid(undo.value)){
+                    this.$set(this.databoard, undo.index, "")
+                    this.remove(this.databoard, undo.index)
+                }
+            }
+        },
+
+        redo(){
+            if ( this.undoIndex != this.undoList.length){
+                let redo = this.undoList[this.undoIndex++]
+                if (redo && this.isValid(redo.value)){
+                    this.$set(this.databoard, redo.index, redo.value)
+                    this.put(this.databoard, redo.index, redo.value, this.helpAllowed)
+                }
+            }
         },
 
         put(board, index, value, helpAllowed){

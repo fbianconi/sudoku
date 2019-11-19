@@ -29,8 +29,8 @@
                     <a v-on:click="newGame(80)" >Extreme</a>
                 </details>
                 <a v-on:click="showoptions =! showoptions"> Options </a>
+                <!-- <a v-on:click="helpAllowed = !helpAllowed" >Allow Help</a> -->
             </div>
-            <!-- <a v-on:click="helpAllowed = !helpAllowed" >Allow Help</a> -->
 	        <div id="board">
                 <div v-for="(item, i) in databoard"
                      :data-index="i" :data-col="column(i)" :data-row="row(i)" :data-grp="group(i)"
@@ -46,11 +46,10 @@
                      v-on:click="selected=n" >{{n}}
                 </div>
                 <!--
-                     <div id="clearSelect">&#9747;</div>
-                     <div id="redo">&#11179;</div>
                      <div v-on:click="annotate = !annotate" >{{ annotate? "&#9999;" : "&#10002;" }}</div>
                 -->
-                <div v-on:click="undo()">Undo</div>
+                <div :class="{disabled: undoIndex <= 0}"  v-on:click="undo()">Undo</div>
+                <div :class="{disabled: undoIndex == undoList.length }" v-on:click="redo()">Redo</div>
                 <div v-on:click="showmenu = true" >Menu</div>
             </div>
             <div class="push"></div>
