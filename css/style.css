@@ -164,11 +164,16 @@ body{
 #controls>*{
     display: inline-block;
     cursor: default;
-    text-align:center;
-    border: 1px solid black;
+    text-align: center;
+    border: 2px outset white;
+    border-radius: 8px;
+    background-color: #eee;
 }
 
-#controls .selected{background-color: #Faa;}
+#controls .selected{
+    background-color: #Faa;
+    border-style:inset ;
+}
 #controls .done{
     color: #FFF !important;
     background-color: #555 !important;
