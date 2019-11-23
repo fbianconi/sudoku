@@ -8,39 +8,61 @@ body{
     user-select:none;
     box-sizing:border-box;
 }
-
 #menu{
+    overflow: hidden;
+}
+#mainmenu, #gamemenu, #optionsmenu, #menu{
     background:#f3db21;
     color:#111;
     position: absolute;
     left: 0;
     width: 100vw;
     height: 100vh;
-    display:flex;
-    transition: left 1s;
+    transition: left .5s;
 }
-#menu.hide{
-    left:-200vw;
-}
-.center{
-    display:flex !important;
-    flex-direction:column;
-    align-content:center;
-    justify-content:center;
-}
-.disabled{
-    color:grey;
+.toggle{padding-right:3em !important;}
+.toggle:after{
+    content: ' ';
+    border: 2px solid;
+    width: 2em;
+    height: 1em;
+    border-radius: 1em;
+    display: inline-block;
+    right: .5em;
+    top: .5em;
+    position: absolute;
 }
 
-#menu>div{
-    max-width: 80%;
-    min-width: 50%;
-    margin: .5em auto;
+.toggle:before{
+    content:' ';
+    width:.8em;
+    height:.8em;
+    display: inline-block;
+    right: 1.7em;
+    top: .7em;
+    position: absolute;
+    border-radius: .8em;
+    background:#111;
+    transition: right .2s;
+}
+
+.toggle.active:before{
+    right:.7em;
+}
+
+.disabled{ color:grey; }
+
+#menu.hide{left:-200vw;}
+#mainmenu.hide, #gamemenu.hide, #optionsmenu.hide{left:-100vw;}
+
+#menu>*{
+    width: 70%;
+    margin-left: 15%;
 }
 
 .center>*{
     display: block;
-    padding: 1em 2em;
+    padding: .5em;
     margin:3px;
     text-align: center;
     position: relative;
@@ -52,11 +74,6 @@ body{
     border: none;
     font-size: x-large;
     font-weight: 900;
-}
-#menu summary{
-    padding: 0;
-    border: none;
-    outline: none;
 }
 
 #sudoku-game{
@@ -77,12 +94,9 @@ body{
     }
     #controls >*{
         font-size: 7vw;
-        min-width: calc(100vw / 9);
-        line-height: calc(100vw / 9);
-    }
-    #adsense{
-        left:0;
-        height:15vh;
+        min-width: 10vw;
+        min-height: 10vw;
+        line-height: 10vw;
     }
     #sudoku-game{
         flex-direction: column;
@@ -103,12 +117,9 @@ body{
     }
     #controls >*{
         font-size: 7vh;
-        min-width: calc(100vh / 9);
-        line-height: calc(100vh / 9);
-    }
-    #adsense{
-        top:0;
-        width:15vw;
+        min-width: 10vh;
+        min-height: 10vh;
+        line-height: 10vh;
     }
 }
 
@@ -160,8 +171,10 @@ body{
 #controls {
     display: inline-flex;
     flex-wrap:wrap;
+    justify-content: center;
 }
 #controls>*{
+    padding: 0 .3em;
     display: inline-block;
     cursor: default;
     text-align: center;
@@ -179,10 +192,11 @@ body{
     background-color: #555 !important;
 }
 
-.push{margin:auto;}
+.push{content:' '; margin:auto;}
+
 #adsense{
     /* position: absolute; */
     background: #ddd;
-    bottom:0;
-    right:0;
+    /* bottom:0; */
+    /* right:0; */
 }

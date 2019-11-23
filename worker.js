@@ -5,7 +5,11 @@ var urlsToCache = [
     'css/style.css',
     'src/main.js',
     'src/vue.js',
-    'img/icon.svg'
+    'css/Glyphter.css',
+    'fonts/Glyphter.woff',
+    'fonts/Glyphter.ttf',
+    'fonts/Glyphter.svg',
+    'fonts/Glyphter.eot',
 ];
 
 self.addEventListener('install', function(event) {

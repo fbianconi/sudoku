@@ -1,46 +1,63 @@
 //todo: split logic and presentation is it worth it??
 
 const ls = window.localStorage
+let data= {
+    playAudio:true,
+    showmenu: true,
+    menu: 'newgame',
+    canResume: false,
+    canReset: false,
+    databoard: Array(81).fill(0),
+    begin:[],
+    undoList:[],
+    notes: Array(81).fill( new Set() ),
+    undoIndex:0,
+    selected:null,
+    annotate:false,
+    focused:null,
+    seed:637485, //start with fixed value
+    startTime:null,
+    pausedTime:null,
+    finishedTime:null,
+    helpAllowed:true,
+    digitFirst:true,
+}
+
+
+//watch and save every property in app.data
+let watch={}
+for (let prop of Object.keys(data))
+    watch[prop] = function(after, before){
+        if (prop == "databoard" || prop == "notes"){
+            let arrset = after.map( (x)=> (this.isValid(x) ? x : Array.from(x) ) )
+            ls[prop] = JSON.stringify(arrset)            
+        }else{
+            ls[prop] = JSON.stringify(after)
+        }
+    };
+
 
 var app=new Vue({
     el:"#sudoku-game",
-    data:{
-        showmenu: true,
-        canResume: false,
-        canReset: false,
-        databoard: Array(81).fill(0),
-        begin:[],
-        undoList:[],
-        undoIndex:0,
-        selected:null,
-        annotate:false,
-        focused:null,
-        seed:0,
-        startTime:null,
-        pausedTime:null,
-        finishedTime:null,
-        helpAllowed:true,
-        digitFirst:true,
-    },
+    data:data,
     created(){
-        if (ls.seed){
-            this.seed=ls.seed
-        }else{
-            this.seed=~~(Math.random()*Number.MAX_SAFE_INTEGER)
-        }
-        if (ls.game){
-            //TODO: save and load game
-            let game = JSON.parse(ls.game)
-            this.databoard=game.databoard
-            this.begin=game.begin
-            this.undoStack=game.undoStack
+        //TODO: save and load game
+        for (let prop of Object.keys(this._data)){
+            if (ls[prop]){
+                console.log(prop + " : " + ls[prop] )
+                this._data[prop] = JSON.parse(ls[prop])
+            }
+            if (prop == "databoard" || prop == "notes"){
+                let arrset = this._data[prop].map( (x)=> (this.isValid(x) ? x : new Set(x) ) )
+                this._data[prop] = arrset
+            }
         }
     },
     methods: {
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
         column(n){return n % 9+1} ,
         row(n){return ~~(n / 9)+1} ,
-        // select(n){this.selected=n} ,
+        // select(n){this.selected=n},
         resume(){if (this.canResume) this.showmenu=false } ,
         reset(){
             if (this.canReset){
@@ -53,21 +70,24 @@ var app=new Vue({
         },
         newGame:function (n){
             this.canResume=true;
-            this.startTime=new Date() //TODO: implement pauses
+            this.startTime=new Date() //TODO: implement pauses?
             this.selected=null;
             this.databoard=this.newBoard(n)
             this.begin=this.databoard.map( (x)=> (this.isValid(x) ? x : "" ) )
             this.showmenu=false
             this.finished=null
-            this.$refs.newGameSummary.click()
+            this.menu='main'
         },
         endGame(){
             this.canResume=false;
             this.finished=new Date();
             this.selected=null;
+            this.menu="newgame"
+            this.showmenu=true
+            //TODO: show time and offer to play again.
         },
         random(){
-            this.seed = this.seed * 16807 % 2147483647;
+            this.seed = Math.abs(this.seed * 16807 % 2147483647);
             return (this.seed - 1) / 2147483646
         },
         isFull: function(n){return 9==this.databoard.reduce( (count,x)=>count+(x==n), 0); },
@@ -77,6 +97,7 @@ var app=new Vue({
                 let sel = this.selected
                 let val = e.target.innerHTML.trim()
                 if ( val == sel){ //there's a value, remove it
+                    this.$set(this.databoard, i, "")
                     this.remove(this.databoard, i)
                 }else if (val == '' ){ // cell is empty
                     if (this.put(this.databoard, i, sel, this.helpAllowed)){
@@ -91,8 +112,10 @@ var app=new Vue({
                 }else if (val != '' ){//there's other value there, switch it??                    
                 }
             }
+            if( this.isSolved(this.databoard) ){
+                this.endGame()
+            }
         },
-        
         undo(){
             if (this.undoIndex>0){
                 let undo = this.undoList[--this.undoIndex]
@@ -102,7 +125,6 @@ var app=new Vue({
                 }
             }
         },
-
         redo(){
             if ( this.undoIndex != this.undoList.length){
                 let redo = this.undoList[this.undoIndex++]
@@ -112,34 +134,27 @@ var app=new Vue({
                 }
             }
         },
-
         put(board, index, value, helpAllowed){
             //put a value to the board if the state admits it, or if help is disabled
             //tile should contain an array of possible values; or a number if it's been filled
-
             if (helpAllowed && (!board[index] || !board[index].has || !board[index].has(value))) return false;
-
             let col = index % 9
             let row = ~~(index / 9)
             let gc = ~~(col / 3)
             let gr = ~~(row / 3)
-
             for (let i = 0 ; i < 9 ; i++) {
                 let c = i * 9 + col
                 let r = row * 9 + i
                 let gx = i % 3
                 let gy = ~~(i / 3)
                 let g = 3 * gc + gx + 27 * gr + 9 * gy  
-
                 if (Set.prototype.isPrototypeOf( board[c] ) ) board[c].delete(value) 
                 if (Set.prototype.isPrototypeOf( board[r] ) ) board[r].delete(value)
                 if (Set.prototype.isPrototypeOf( board[g] ) ) board[g].delete(value)
-            }
-            
+            }            
             board[index]=value;
             return true;
         },
-
         remove(board, index){
 	        let myBoard = Array.from({length: 81}, e => new Set([1,2,3,4,5,6,7,8,9]) )
 	        for(let x = 0; x < board.length; x++) {
@@ -147,33 +162,31 @@ var app=new Vue({
 	        }
             Array.prototype.splice.apply(board, [0, myBoard.length].concat(myBoard));
         },
-
         pickOne(aset) {
             //Selects random item from set, delete it from the set and return it; like a random Array.pop()
-	        let idx = ~~(this.random() * aset.size) //TODO: make it seedable
+	        let idx = ~~(this.random() * aset.size)
 	        let value = [...aset][idx]
 	        aset.delete(value)
 	        return value
         },
-
         isSolvable(board){
             //true if all the empty tiles have at least one possible value;
             //Is a misnomer, as it doesn't guarantees that can actually be solved.
 	        for (let i = 0; i < board.length; i++){
-		        if (!this.isValid(board[i]) && board[i].size === 0) return false
+		        if (board[i] && board[i].size && board[i].size === 0) return false
 	        }
 	        return true
         },
-
         isSolved(board){
 	        for (let i=0; i<board.length; i++){
 		        if ( !this.isValid( board[i] )) return false
 	        }
 	        return true
         },
-
-        isValid(n){return /^[1-9]$/.test(''+n)},
-
+        isValid(n){
+            if (typeof n === "object" ) return false;
+            return /^[1-9]$/.test(''+n)
+        },
         isItStillUnique(board){
             //TODO: rewrite the logic, as it is is not enough.
             // return true if it's "solvable" and at least 1 tile can be autofilled
@@ -184,27 +197,25 @@ var app=new Vue({
 	        }
             return maybe;
         },
-
         solve(someBoard){ //receive the board as parameter, we don't want to show how we put it together,
             //backtrack depth-first solver (return first solution)
             //console.log("solving")
             let board = someBoard.map( (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
-                stack = [] //private undo stack
+                stack = [], //private undo stack
+                selects = 0
 	        while (!this.isSolved(board)){
                 //keep putting numbers
 		        while(this.isSolvable(board)) {
-                    //get the number of possible values for each spot or 10 if the spot is filled
+                    //get the number of possible values for each spot
+                    //or 10 if the spot is filled (we'll select the min, solved can't be min)
 			        let lengthsArray = board.map( (x)=> ( this.isValid(x) ? 10 : x.size ) )
-                    //get the minimum number of possible values for each spot
+                    //get the minimum number of possible values for each spot 
 			        let min = lengthsArray.reduce((a, b) => {return Math.min(a, b)} )
                     //Where's the min?
-			        let index = lengthsArray.indexOf(min)
-                    
-                    if (min == 10 ){
-                        //console.log("Solved!") //this is the most likely exit point
+			        let index = lengthsArray.indexOf(min)                  
+                    if (min == 10 ){ //this is the most likely exit point
                         return board
-                    }
-                    
+                    }                    
                     if (min == 1){
                         //if there's only one value possible just put it in
                         this.put (board, index, [...board[index]][0])
@@ -215,19 +226,17 @@ var app=new Vue({
                         let oldBoard = board.map( (x) => (this.isValid(x) ? x : new Set(x) ) )
 				        stack.push( {index:index, values:values, board: oldBoard})
                         this.put (board, index, myValue)
+                        selects++
 			        }
 		        }
-
                 //we're in an invalid state; back to last choice
 		        do{
                     var undo = stack.pop() //let it hoist
                 }while(undo && undo.values.size==0) //unstack all the finished alternatives
-
                 if (undo === undefined ) { //options exhausted
                     //console.log("Can't be solved")
                     return null
-                }
-                
+                }                
                 board = undo.board
 		        let myValue = this.pickOne(undo.values)
                 this.put (board, undo.index, myValue)
@@ -236,13 +245,11 @@ var app=new Vue({
             //console.log("Solved!")
 	        return board
         },
-
         removeRandomOne(board){
             let candidates = new Set(board.map((val, idx) => { if ( this.isValid (val)) return idx } ))
             let index = this.pickOne(candidates)
             this.remove(board, index)
         },
-
         newBoard(n){
             //start with a filled (solved) board 
             let board = this.solve( Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] )) )
@@ -263,7 +270,6 @@ var app=new Vue({
             }
             return board
         },
-
         showHint(board){
             //TODO: vuetify this
             let solvable = true;
@@ -281,16 +287,10 @@ var app=new Vue({
                 window.setTimeout( () => el.classList.remove("hint"), 4000 )
                 console.log("hint: ",index)
             }
-        }
-        
+        }        
     },
-    watch:{
-        seed(value){
-            ls.seed=value;
-        }
-    }
+    watch: watch
 })
-
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
@@ -305,18 +305,4 @@ if ('serviceWorker' in navigator) {
 }
 
 
-
-function Random(seed) {
-  this._seed = seed % 2147483647;
-  if (this._seed <= 0) this._seed += 2147483646;
-}
-
-Random.prototype.next = function () {
-  return this._seed = this._seed * 16807 % 2147483647;
-};
-
-Random.prototype.nextFloat = function (opt_minOrMax, opt_max) {
-  // We know that result of next() will be 1 to 2147483646 (inclusive).
-  return (this.next() - 1) / 2147483646;
-};
 
