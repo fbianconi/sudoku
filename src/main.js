@@ -21,6 +21,7 @@ let data= {
     finishedTime:null,
     helpAllowed:true,
     digitFirst:true,
+    hint:-1
 }
 
 
@@ -43,7 +44,7 @@ var app=new Vue({
     created(){
         for (let prop of Object.keys(this._data)){
             if (ls[prop]){
-                console.log(prop + " : " + ls[prop] )
+                // console.log(prop + " : " + ls[prop] )
                 this._data[prop] = JSON.parse(ls[prop])
             }
             if (prop == "databoard" || prop == "notes"){
@@ -172,7 +173,7 @@ var app=new Vue({
             //true if all the empty tiles have at least one possible value;
             //Is a misnomer, as it doesn't guarantees that can actually be solved.
 	        for (let i = 0; i < board.length; i++){
-		        if (board[i] && board[i].size && board[i].size === 0) return false
+		        if (board[i] && board[i].hasOwnProperty("size") && board[i].size === 0) return false
 	        }
 	        return true
         },
@@ -186,52 +187,41 @@ var app=new Vue({
             if (typeof n === "object" ) return false;
             return /^[1-9]$/.test(''+n)
         },
-        isItStillUnique(board){
-            //TODO: rewrite the logic, as it is is not enough.
-            // return true if it's "solvable" and at least 1 tile can be autofilled
-            let maybe=false
-	        for (let i = 0;i<81;i++){
-                if (!this.isValid(board[i]) && board[i].size===0) return false //solvable?
-		        if (!this.isValid(board[i]) && board[i].size===1) maybe=true;
-	        }
-            return maybe;
-        },
-        solve(someBoard){ //receive the board as parameter, we don't want to show how we put it together,
+        solve(someBoard){
+            //receive the board as parameter, we don't want to show how we put it together,
             //backtrack depth-first solver (return first solution)
-            //console.log("solving")
-            let board = someBoard.map( (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
-                stack = [], //private undo stack
-                selects = 0
+            let board = Array.from(someBoard, (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
+                stack = [] //private undo stack
 	        while (!this.isSolved(board)){
-                //keep putting numbers
 		        while(this.isSolvable(board)) {
-                    //get the number of possible values for each spot
-                    //or 10 if the spot is filled (we'll select the min, solved can't be min)
-			        let lengthsArray = board.map( (x)=> ( this.isValid(x) ? 10 : x.size ) )
-                    //get the minimum number of possible values for each spot 
-			        let min = lengthsArray.reduce((a, b) => {return Math.min(a, b)} )
-                    //Where's the min?
-			        let index = lengthsArray.indexOf(min)                  
-                    if (min == 10 ){ //this is the most likely exit point
+                    let min=10
+                    let index =-1
+                    for (let i=0;i<81;i++){
+                        if(board[i] && !this.isValid( board[i] )) {
+                            if (board[i].size != undefined && board[i].size < min ){
+                                min = board[i].size
+                                index = i
+                            }
+                        }
+                    }
+                    if (min == 10 ){
                         return board
                     }                    
                     if (min == 1){
-                        //if there's only one value possible just put it in
                         this.put (board, index, [...board[index]][0])
 			        }else{
                         //if there's more than one possible values, stack the state and pick one at random
 				        let values = new Set( board[index] )
 				        let myValue = this.pickOne( values )
-                        let oldBoard = board.map( (x) => (this.isValid(x) ? x : new Set(x) ) )
+                        let oldBoard = Array.from(board, (x)=> (this.isValid(x) ? x : new Set(x) ) )
 				        stack.push( {index:index, values:values, board: oldBoard})
                         this.put (board, index, myValue)
-                        selects++
 			        }
 		        }
                 //we're in an invalid state; back to last choice
 		        do{
-                    var undo = stack.pop() //let it hoist
-                }while(undo && undo.values.size==0) //unstack all the finished alternatives
+                    var undo = stack.pop()
+                } while(undo && undo.values.size == 0) //unstack all the finished alternatives
                 if (undo === undefined ) { //options exhausted
                     //console.log("Can't be solved")
                     return null
@@ -243,33 +233,95 @@ var app=new Vue({
 	        }
 	        return board
         },
+        isUnique(someBoard, solution){
+            //backtrack solver (check every solution)
+            let board = someBoard.map( (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
+                stack = [] //private undo stack
+            if (solution == null) return false
+
+	        do{
+		        while(this.isSolvable(board) && !this.isSolved(board)) {
+                    let min=10
+                    let index =-1
+                    for (let i=0 ; i < 81 ; i++){
+                        //select next index
+                        if(board[i]==undefined){
+                            console.log("undefined")
+                            return null
+                        }
+                        
+                        if ( !this.isValid(board[i] )) {
+                            if (board[i] != undefined && board[i].size < min ){
+                                min = board[i].size
+                                index = i
+                            }
+                        }
+                    }
+                    if (min == 1){
+                        //if there's only one value possible just put it in
+                        this.put (board, index, [...board[index]][0])
+			        }else{
+                        //if there's more than one possible values, stack the state and use the next
+				        let values = new Set( board[index] )
+				        let myValue = [...values][0]
+                        values.delete(myValue)
+                        let oldBoard = board.map( (x) => (this.isValid(x) ? x : new Set(x) ) )
+				        stack.push( {index:index, values:values, board: oldBoard})
+                        this.put (board, index, myValue)
+			        }
+		        }
+                for (let i =0; i<81;i++){
+                    if (board[i]!=solution[i]) return false
+                }
+                //back to last choice
+		        do{
+                    var undo = stack.pop() //let it hoist
+                }while(undo && undo.values.size==0) //unstack all the finished alternatives
+                if (undo === undefined ) { //options exhausted
+                    return true
+                }                
+                board = undo.board
+		        let myValue = [...undo.values][0]
+                undo.values.delete(myValue)
+                this.put (board, undo.index, myValue)
+		        stack.push(undo)
+	        } while(stack.length != 0)
+            return true
+        },
         removeRandomOne(board){
-            let candidates = new Set(board.map((val, idx) => { if ( this.isValid (val)) return idx } ))
+            let candidates = new Set()
+            for (let i = 0 ; i< board.length ; i++){
+                if ( this.isValid(board[i]) ) {
+                    candidates.add(i)
+                }
+            }
             let index = this.pickOne(candidates)
             this.remove(board, index)
+            return index
         },
         newBoard(n){
             //start with a filled (solved) board 
             let board = this.solve( Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] )) )
+            let solution = board.map( (x)=> (this.isValid(x) ? x : new Set(x) ) )
+            let order = new Set(Array.from({length: 81}, (v, i) => i))
+            let chaos = [] 
+            while (order.size) chaos.push( this.pickOne(order) )
+
             let removed = 0
-            let target = n;
-            let tries = 1;
-            while (tries && (removed <= target) ){
-                let oldBoard = board.map( (x)=>{ return (this.isValid (x) ? x : new Set(x) ) })
-                //then remove at random
-                this.removeRandomOne(board);
-                removed++;
-                //TODO: keep it auto solvable
-                if ( !this.isItStillUnique (board)){
-                    board = oldBoard
-                    removed--;
-                    tries--;
+            for (let i of chaos){
+                let value = board[i]
+                this.remove(board, i)
+                removed++
+                if (!this.isUnique(board, solution)){
+                    //undo
+                    this.put(board,i,value)
+                    removed--
                 }
+                if (removed>n) return board
             }
             return board
         },
         showHint(board){
-            //TODO: vuetify this
             let solvable = true;
             let index = undefined
             for (let i = 0;i<81;i++){
@@ -280,10 +332,9 @@ var app=new Vue({
                 alert("Not solvable")
             }
             if (index >=0 ){
-                let el = document.querySelector("[data-index='"+index+"']"); 
-                el.classList.add("hint")
-                window.setTimeout( () => el.classList.remove("hint"), 4000 )
-                console.log("hint: ",index)
+                this.hint = index
+                setTimeout( () => this.hint = -1 , 4000 )
+                //console.log("hint: ",index)
             }
         }        
     },
