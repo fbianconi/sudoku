@@ -41,7 +41,6 @@ var app=new Vue({
     el:"#sudoku-game",
     data:data,
     created(){
-        //TODO: save and load game
         for (let prop of Object.keys(this._data)){
             if (ls[prop]){
                 console.log(prop + " : " + ls[prop] )
@@ -242,7 +241,6 @@ var app=new Vue({
                 this.put (board, undo.index, myValue)
 		        stack.push(undo)
 	        }
-            //console.log("Solved!")
 	        return board
         },
         removeRandomOne(board){
