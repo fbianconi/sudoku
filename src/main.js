@@ -24,10 +24,9 @@ let data= {
     hint:-1
 }
 
-
-//watch and save every property in app.data
+//autosave state
 let watch={}
-for (let prop of Object.keys(data))
+for (let prop of Object.keys(data)){
     watch[prop] = function(after, before){
         if (prop == "databoard" || prop == "notes"){
             let arrset = after.map( (x)=> (this.isValid(x) ? x : Array.from(x) ) )
@@ -36,15 +35,16 @@ for (let prop of Object.keys(data))
             ls[prop] = JSON.stringify(after)
         }
     };
+}
 
 
 var app=new Vue({
     el:"#sudoku-game",
     data:data,
     created(){
+        //autoload state
         for (let prop of Object.keys(this._data)){
-            if (ls[prop]){
-                // console.log(prop + " : " + ls[prop] )
+            if (ls[prop] != undefined){
                 this._data[prop] = JSON.parse(ls[prop])
             }
             if (prop == "databoard" || prop == "notes"){
@@ -68,15 +68,24 @@ var app=new Vue({
                 this.showmenu=false
             }
         },
-        newGame:function (n){
-            this.canResume=true;
-            this.startTime=new Date() //TODO: implement pauses?
-            this.selected=null;
+        newGame(n){
             this.databoard=this.newBoard(n)
             this.begin=this.databoard.map( (x)=> (this.isValid(x) ? x : "" ) )
-            this.showmenu=false
+            this.canResume=true;
+            this.canReset= false
+            this.selected=null;
+            this.startTime=new Date() //TODO: implement pauses?
+            this.pausedTime=null
+            this.finishedTime=null
             this.finished=null
+            this.showmenu=false
             this.menu='main'
+            this.undoList=[]
+            this.notes=Array(81).fill( new Set() )
+            this.undoIndex=0
+            this.annotate=false
+            this.focused=null
+            this.hint=-1
         },
         endGame(){
             this.canResume=false;
@@ -90,47 +99,71 @@ var app=new Vue({
             this.seed = Math.abs(this.seed * 16807 % 2147483647);
             return (this.seed - 1) / 2147483646
         },
-        isFull: function(n){return 9==this.databoard.reduce( (count,x)=>count+(x==n), 0); },
-        play:function(e){
-            let i = e.target.dataset.index
+        isFull(n){return 9==this.databoard.reduce( (count,x)=>count+(x==n), 0); },
+        play(e){
+            let el = e.target.closest("[data-index]")
+            let i = el.dataset.index
             if ( !this.isValid(this.begin[i]) ){ //didn't hit a default value
                 let sel = this.selected
-                let val = e.target.innerHTML.trim()
-                if ( val == sel){ //there's a value, remove it
-                    this.$set(this.databoard, i, "")
-                    this.remove(this.databoard, i)
-                }else if (val == '' ){ // cell is empty
-                    if (this.put(this.databoard, i, sel, this.helpAllowed)){
-                        this.$set(this.databoard, i, sel)
-                        if (this.undoIndex != this.undoList.length){
-                            this.undoList.splice(this.undoIndex, this.undoList.length)
-                        }
-                        this.undoList.push({value:sel, index:i})
-                        this.undoIndex = this.undoList.length
-                    }
-                    this.canReset=true
-                }else if (val != '' ){//there's other value there, switch it??                    
+                let val = this.databoard[i]
+                if(this.annotate){
+                    this.notes[i].has(sel) ? this.notes[i].delete(sel) : this.notes[i].add(sel)
+                    this.$set(this.notes, i, this.notes[i])
+                    return
                 }
+                if ( val == sel){ //already there, remove it
+                    this.remove(this.databoard, i)
+                    this.$set(this.databoard, i, this.databoard[i])
+                    this.addToUndo(i, sel)
+                }else if (! this.isValid(val) ){ // cell is empty
+                    if (this.put(this.databoard, i, sel, this.helpAllowed)){
+                        this.$set(this.databoard, i, this.databoard[i])
+                        this.addToUndo(i, sel)
+                        this.canReset=true
+                    }
+                }
+                // else if (val != '' ){//there's other value there, switch it??                    
+                // }
             }
             if( this.isSolved(this.databoard) ){
                 this.endGame()
             }
         },
+        addToUndo(index, value){
+            if (this.undoIndex != this.undoList.length){
+                //discard redo operations
+                this.undoList.splice(this.undoIndex, this.undoList.length)
+            }
+            // let last = this.undoList[this.undoIndex]
+            // if (last.index==index && last.value == value){
+            //     //operation is the same as last, just discard it??
+            //     this.undoList.pop()
+            // }else{
+            this.undoList.push({index:index, value:value})                
+            // }   
+            this.undoIndex = this.undoList.length                            
+        },
         undo(){
             if (this.undoIndex>0){
                 let undo = this.undoList[--this.undoIndex]
-                if (undo && this.isValid(undo.value)){
+                if (this.databoard[undo.index]==undo.value){
                     this.$set(this.databoard, undo.index, "")
                     this.remove(this.databoard, undo.index)
+                }else if (!this.isValid(this.databoard[undo.index])){
+                    this.$set(this.databoard, undo.index, undo.value)
+                    this.put(this.databoard, undo.index, undo.value, this.helpAllowed)                    
                 }
             }
         },
         redo(){
             if ( this.undoIndex != this.undoList.length){
                 let redo = this.undoList[this.undoIndex++]
-                if (redo && this.isValid(redo.value)){
+                if (this.databoard[redo.index]==redo.value){
+                    this.$set(this.databoard, redo.index, "")
+                    this.remove(this.databoard, redo.index)
+                }else if (!this.isValid(this.databoard[redo.index])){
                     this.$set(this.databoard, redo.index, redo.value)
-                    this.put(this.databoard, redo.index, redo.value, this.helpAllowed)
+                    this.put(this.databoard, redo.index, redo.value, this.helpAllowed)                    
                 }
             }
         },

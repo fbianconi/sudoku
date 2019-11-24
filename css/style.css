@@ -10,6 +10,7 @@ body{
 }
 #menu{
     overflow: hidden;
+    z-index: 10;
 }
 #mainmenu, #gamemenu, #optionsmenu, #menu{
     background:#f3db21;
@@ -89,14 +90,12 @@ body{
         height: 100vw;
     }
     #board [data-index]{
-        line-height: 10.5vw;
         font-size: 7vw;
     }
     #controls >*{
         font-size: 7vw;
         min-width: 10vw;
         min-height: 10vw;
-        line-height: 10vw;
     }
     #sudoku-game{
         flex-direction: column;
@@ -109,7 +108,6 @@ body{
         height: 100vh;
     }
     #board [data-index]{
-        line-height: 10.5vh;
         font-size: 7vh;
     }
     #controls {
@@ -119,7 +117,6 @@ body{
         font-size: 7vh;
         min-width: 10vh;
         min-height: 10vh;
-        line-height: 10vh;
     }
 }
 
@@ -135,12 +132,14 @@ body{
 }
 
 #board [data-index]{
-    display: inline-block;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     overflow: hidden;
-    text-align: center;
     cursor: default;
     color: #333;
     border: 1px solid black;
+    position: relative;
 }
 
 #board [data-grp='1'],#board [data-grp='3'],#board [data-grp='5'],#board [data-grp='7'],#board [data-grp='9']{
@@ -168,17 +167,29 @@ body{
     50% {background-color: red;}
 }
 
+#board .note {
+    display: grid;
+    grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-items: center;
+    align-items: center;
+}
+
 #controls {
     display: inline-flex;
     flex-wrap:wrap;
     justify-content: center;
 }
 #controls>*{
-    padding: 0 .3em;
-    display: inline-block;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     cursor: default;
-    text-align: center;
-    border: 2px outset white;
+    border: .05em outset white;
     border-radius: 8px;
     background-color: #eee;
 }
