@@ -7,7 +7,7 @@ const text = {
         "Restart":  "Reiniciar",
         "New Game": "Juego Nuevo",
         "Options":  "Opciones",
-        "Easy":     "Fácli",
+        "Easy":     "Fácil",
         "Medium":   "Medio",
         "Hard":     "Difícil",
         "Extreme":  "Extremo",
@@ -30,7 +30,7 @@ let data= {
     databoard: Array(81).fill(0),
     begin:[],
     undoList:[],
-    notes: Array(81).fill( new Set() ),
+    notes: Array(81).fill( () => new Set() ),
     undoIndex:0,
     selected:null,
     annotate:false,
@@ -66,15 +66,19 @@ var app=new Vue({
         for (let prop of Object.keys(this._data)){
             if (ls[prop] != undefined){
                 this._data[prop] = JSON.parse(ls[prop])
-            }
-            if (prop == "databoard" || prop == "notes"){
-                let arrset = this._data[prop].map( (x)=> (this.isValid(x) ? x : new Set(x) ) )
-                this._data[prop] = arrset
+                if (prop == "databoard" || prop == "notes"){
+                    let arrset = this._data[prop].map( (x)=> (this.isValid(x) ? x : new Set(x) ) )
+                    this._data[prop] = arrset
+                }
             }
         }
     },
     methods: {
-        t(string){return text[this.locale][string]||string },
+        t(string){
+            if (text[this.locale][string]) return text[this.locale][string]
+            console.log ("missing ("+this.locale+"): '"+string+"'")
+            return string
+        },
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
         column(n){return n % 9+1} ,
         row(n){return ~~(n / 9)+1} ,
@@ -90,6 +94,7 @@ var app=new Vue({
             }
         },
         newGame(n){
+            this.notes=Array(81).fill(()=> new Set() )
             this.begin=[]
             this.databoard=this.newBoard(n)
             this.begin=this.databoard.map( (x)=> (this.isValid(x) ? x : "" ) )
@@ -103,11 +108,32 @@ var app=new Vue({
             this.showmenu=false
             this.menu='main'
             this.undoList=[]
-            this.notes=Array(81).fill( new Set() )
             this.undoIndex=0
             this.annotate=false
             this.focused=null
             this.hint=-1
+        },
+        newBoard(n){
+            //start with a filled (solved) board 
+            let board = this.solve( Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] )) )
+            let solution = board.map( (x)=> (this.isValid(x) ? x : new Set(x) ) )
+            let order = new Set(Array.from({length: 81}, (v, i) => i))
+            let chaos = [] 
+            while (order.size) chaos.push( this.pickOne(order) )
+
+            let removed = 0
+            for (let i of chaos){
+                let value = board[i]
+                this.remove(board, i)
+                removed++
+                if (!this.isUnique(board, solution)){
+                    //undo
+                    this.put(board,i,value)
+                    removed--
+                }
+                if (removed>n) return board
+            }
+            return board
         },
         endGame(){
             this.canResume=false;
@@ -138,7 +164,7 @@ var app=new Vue({
                     this.$set(this.databoard, i, this.databoard[i])
                     this.addToUndo(i, sel)
                 }else if (! this.isValid(val) ){ // cell is empty
-                    if (this.put(this.databoard, i, sel, this.helpAllowed)){
+                    if (this.put(this.databoard, i, sel, this.helpAllowed, true)){
                         this.$set(this.databoard, i, this.databoard[i])
                         this.addToUndo(i, sel)
                         this.canReset=true
@@ -189,7 +215,7 @@ var app=new Vue({
                 }
             }
         },
-        put(board, index, value, helpAllowed){
+        put(board, index, value, helpAllowed, interactive){
             //put a value to the board if the state admits it, or if help is disabled
             //tile should contain an array of possible values; or a number if it's been filled
             if (helpAllowed && (!board[index] || !board[index].has || !board[index].has(value))) return false;
@@ -203,9 +229,17 @@ var app=new Vue({
                 let gx = i % 3
                 let gy = ~~(i / 3)
                 let g = 3 * gc + gx + 27 * gr + 9 * gy  
-                if (Set.prototype.isPrototypeOf( board[c] ) ) board[c].delete(value) 
-                if (Set.prototype.isPrototypeOf( board[r] ) ) board[r].delete(value)
+                if (Set.prototype.isPrototypeOf( board[c] ) ) board[c].delete(value)
+                if (Set.prototype.isPrototypeOf( board[r] ) ) board[r].delete(value) 
                 if (Set.prototype.isPrototypeOf( board[g] ) ) board[g].delete(value)
+                if (interactive){
+                    this.notes[c].delete(value)
+                    this.$set(this.notes, c,this.notes[c])
+                    this.notes[r].delete(value)
+                    this.$set(this.notes, r,this.notes[r])
+                    this.notes[g].delete(value)
+                    this.$set(this.notes, g,this.notes[g])
+                }
             }            
             board[index]=value;
             return true;
@@ -263,7 +297,11 @@ var app=new Vue({
                             console.log(i, board, stack)
                             return null
                         }
-                    }  
+                    }
+                    if (min == 10){
+                        // isSolvable( solved_board ) == true    wouldn't leave inner loop
+                        return board
+                    }
                     if (min == 1){
                         this.put (board, index, [...board[index]][0])
 			        }else{
@@ -278,7 +316,7 @@ var app=new Vue({
                 //we're in an invalid state; back to last choice
 		        do{
                     var undo = stack.pop()
-                    if (undo && undo.values.size == 0) console.log( "unstacking")
+                    // if (undo && undo.values.size == 0) console.log( "unstacking")
                 } while(undo && undo.values.size == 0) //unstack all the finished alternatives
                 if (undo === undefined  ) { //options exhausted
                     //console.log("Can't be solved")
@@ -323,15 +361,17 @@ var app=new Vue({
                         this.put (board, index, myValue)
 			        }
 		        }
-                for (let i =0; i<81;i++){
-                    if (board[i]!=solution[i]) return false
+                if (this.isSolved(board)){
+                    for (let i =0; i<81;i++){
+                        if (board[i]!=solution[i]) return false
+                    }
                 }
                 //back to last choice
 		        do{
                     var undo = stack.pop() //let it hoist
                 }while(undo && undo.values.size==0) //unstack all the finished alternatives
                 if (undo === undefined ) { //options exhausted
-                    return true
+                    return this.isSolved(board) // we've checked everything and didn't bailed yet
                 }                
                 board = undo.board
 		        let myValue = [...undo.values][0]
@@ -351,28 +391,6 @@ var app=new Vue({
             let index = this.pickOne(candidates)
             this.remove(board, index)
             return index
-        },
-        newBoard(n){
-            //start with a filled (solved) board 
-            let board = this.solve( Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] )) )
-            let solution = board.map( (x)=> (this.isValid(x) ? x : new Set(x) ) )
-            let order = new Set(Array.from({length: 81}, (v, i) => i))
-            let chaos = [] 
-            while (order.size) chaos.push( this.pickOne(order) )
-
-            let removed = 0
-            for (let i of chaos){
-                let value = board[i]
-                this.remove(board, i)
-                removed++
-                if (!this.isUnique(board, solution)){
-                    //undo
-                    this.put(board,i,value)
-                    removed--
-                }
-                if (removed>n) return board
-            }
-            return board
         },
         showHint(board){
             let solvable = true;

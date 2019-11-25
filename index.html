@@ -50,7 +50,10 @@
 	        <div id="board">
                 <div v-for="(item, i) in databoard"
                      :data-index="i" :data-col="column(i)" :data-row="row(i)" :data-grp="group(i)"
-                     :class="{highlighted: selected==item, default: begin[i]==item, hint: hint==i}"
+                     :class="{highlighted: selected==item, 
+                            default: begin[i]==item, 
+                            hint: hint==i,
+                            noteselect: notes[i].has(selected) && !isValid(item)}"
                      v-on:click="play">
                     {{ isValid(item)? item : "" }}
                     <span v-if="notes[i].size && !isValid(item)" class="note">

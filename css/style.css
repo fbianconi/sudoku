@@ -68,9 +68,7 @@ body{
     background:#111;
     transition: right .2s;
 }
-.toggle.active:before{
-    right:.7em;
-}
+.toggle.active:before{right:.7em;}
 
 .disabled{ color:grey; }
 
@@ -89,7 +87,11 @@ body{
     #board [data-index]{
         font-size: 7vw;
     }
-    #controls >*{
+    .note *{
+        font-size:3.5vw;
+        line-height:3.5vw;
+    }
+    #controls>*{
         font-size: 7vw;
         min-width: 11.109vw;
         min-height: 11.109vw;
@@ -106,6 +108,10 @@ body{
     }
     #board [data-index]{
         font-size: 7vh;
+    }
+    .note * {
+        font-size:3.5vh;
+        line-height:3.5vh;
     }
     #controls {
         flex-direction: column;
@@ -154,6 +160,7 @@ body{
 }
 
 #board .highlighted{background-color: #ccF !important;}
+#board .noteselect{background-color: #ddF !important;}
 #board .focused{background-color: #cFF !important;}
 #board .hint{
     animation-name: hinter;
@@ -174,6 +181,9 @@ body{
     bottom: 0;
     justify-items: center;
     align-items: center;
+}
+#board .note *{
+    font-family: "Courier New", Courier, monospace;
 }
 
 #controls {
