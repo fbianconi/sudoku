@@ -12,7 +12,7 @@ body{
     overflow: hidden;
     z-index: 10;
 }
-#mainmenu, #gamemenu, #optionsmenu, #menu{
+#menu>*, #menu{
     background:#f3db21;
     color:#111;
     position: absolute;
@@ -21,6 +21,29 @@ body{
     height: 100vh;
     transition: left .5s;
 }
+#menu.hide{left:-200vw;}
+#menu>*.hide{left:-100vw;}
+#menu header{
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    width:100%;
+    border: none;
+    font-size: x-large;
+    font-weight: 900;
+}
+.center{display:flex; flex-direction:column;padding:1.5rem 0;}
+.center>*{
+    display: block;
+    padding: .5em;
+    margin: 3px;
+    text-align: center;
+    position: relative;
+    border: 2px solid;
+    border-radius: .3em;
+    align-self:center;
+    width:75%
+}
+
 .toggle{padding-right:3em !important;}
 .toggle:after{
     content: ' ';
@@ -33,7 +56,6 @@ body{
     top: .5em;
     position: absolute;
 }
-
 .toggle:before{
     content:' ';
     width:.8em;
@@ -46,36 +68,11 @@ body{
     background:#111;
     transition: right .2s;
 }
-
 .toggle.active:before{
     right:.7em;
 }
 
 .disabled{ color:grey; }
-
-#menu.hide{left:-200vw;}
-#mainmenu.hide, #gamemenu.hide, #optionsmenu.hide{left:-100vw;}
-
-#menu>*{
-    width: 70%;
-    margin-left: 15%;
-}
-
-.center>*{
-    display: block;
-    padding: .5em;
-    margin:3px;
-    text-align: center;
-    position: relative;
-    border: 2px solid;
-    border-radius: .3em;
-}
-#menu header{
-    padding: .5em;
-    border: none;
-    font-size: x-large;
-    font-weight: 900;
-}
 
 #sudoku-game{
     display:flex;
@@ -94,8 +91,8 @@ body{
     }
     #controls >*{
         font-size: 7vw;
-        min-width: 10vw;
-        min-height: 10vw;
+        min-width: 11.109vw;
+        min-height: 11.109vw;
     }
     #sudoku-game{
         flex-direction: column;
@@ -115,8 +112,8 @@ body{
     }
     #controls >*{
         font-size: 7vh;
-        min-width: 10vh;
-        min-height: 10vh;
+        min-width: 11.109vh;
+        min-height: 11.109vh;
     }
 }
 
@@ -203,7 +200,7 @@ body{
     background-color: #555 !important;
 }
 
-.push{content:' '; margin:auto;}
+.push{content:' '; margin:auto; visibility:hidden;}
 
 #adsense{
     /* position: absolute; */

@@ -24,25 +24,27 @@
             <div id="menu" :class="{hide: !showmenu }">
                 <div id="mainmenu" :class="[{hide: menu != 'main' }, 'center']" >
                     <header>BA5NA Sudoku</header>
-                    <a v-if="canResume" v-on:click="resume" >Continue</a>
-                    <a v-if="canReset" v-on:click="reset" >Restart</a>
-                    <a v-on:click="menu = 'newgame'">New Game</a>
-                    <a v-on:click="menu = 'options'">Options</a>
-                    <!-- <a on-click="window.close()">Exit</a> -->
+                    <a v-if="canResume" v-on:click="resume" >{{t('Continue')}}</a>
+                    <a v-if="canReset" v-on:click="reset" >{{t('Restart')}}</a>
+                    <a v-on:click="menu = 'newgame'">{{t('New Game')}}</a>
+                    <a v-on:click="menu = 'options'">{{t('Options')}}</a>
+                    <!-- <a on-click="window.close()">{{t('Exit</a> -->
                 </div>
                 <div id="gamemenu" :class="[{hide: menu != 'newgame' }, 'center']" >
-                    <header>New Game</header>
-                    <a v-on:click="newGame(30)" >Easy</a>
-                    <a v-on:click="newGame(40)" >Medium</a>
-                    <a v-on:click="newGame(50)" >Hard</a> 
-                    <a v-on:click="newGame(80)" >Extreme</a>
-                    <a v-on:click="menu='main'" >Cancel</a>
+                    <header>{{t('New Game')}}</header>
+                    <a v-on:click="newGame(30)" >{{t('Easy')}}</a>
+                    <a v-on:click="newGame(40)" >{{t('Medium')}}</a>
+                    <a v-on:click="newGame(50)" >{{t('Hard')}}</a> 
+                    <a v-on:click="newGame(80)" >{{t('Extreme')}}</a>
+                    <div class="push"></div>
+                    <a v-on:click="menu='main'" >{{t('Cancel')}}</a>
                 </div>
                 <div id="optionsmenu" :class="[{hide: menu != 'options' }, 'center']" >
-                    <header>Options</header>
-                    <a :class="['toggle', {active: helpAllowed}]" v-on:click="helpAllowed = !helpAllowed" >Allow Help</a>
-                    <a :class="['toggle', {active: playAudio}]" v-on:click="playAudio = !playAudio" >Music</a>
-                    <a v-on:click="menu = 'main'" >Back</a>
+                    <header>{{t('Options')}}</header>
+                    <a :class="['toggle', {active: helpAllowed}]" v-on:click="helpAllowed = !helpAllowed" >{{t('Allow Help')}}</a>
+                    <a :class="['toggle', {active: playAudio}]" v-on:click="playAudio = !playAudio" >{{t('Music')}}</a>
+                    <div class="push"></div>
+                    <a v-on:click="menu = 'main'" >{{t('Back')}}</a>
                 </div>
             </div>
 	        <div id="board">

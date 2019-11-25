@@ -1,9 +1,29 @@
 //todo: split logic and presentation is it worth it??
 
+const text = {
+    en:{},
+    es:{
+        "Continue": "Continuar",
+        "Restart":  "Reiniciar",
+        "New Game": "Juego Nuevo",
+        "Options":  "Opciones",
+        "Easy":     "Fácli",
+        "Medium":   "Medio",
+        "Hard":     "Difícil",
+        "Extreme":  "Extremo",
+        "Back":     "Volver",
+        "Cancel":   "Cancelar",
+        "Music":    "Música",
+        "Allow Help":"Permitir Ayuda",
+        "Well Done!":"Bien Hecho!",
+    },
+}
+
 const ls = window.localStorage
 let data= {
     playAudio:true,
     showmenu: true,
+    locale:"es",
     menu: 'newgame',
     canResume: false,
     canReset: false,
@@ -54,6 +74,7 @@ var app=new Vue({
         }
     },
     methods: {
+        t(string){return text[this.locale][string]||string },
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
         column(n){return n % 9+1} ,
         row(n){return ~~(n / 9)+1} ,
@@ -69,6 +90,7 @@ var app=new Vue({
             }
         },
         newGame(n){
+            this.begin=[]
             this.databoard=this.newBoard(n)
             this.begin=this.databoard.map( (x)=> (this.isValid(x) ? x : "" ) )
             this.canResume=true;
@@ -92,8 +114,8 @@ var app=new Vue({
             this.finished=new Date();
             this.selected=null;
             this.menu="newgame"
-            this.showmenu=true
-            //TODO: show time and offer to play again.
+            setTimeout( ()=>this.showmenu=true , 2000 )
+            
         },
         random(){
             this.seed = Math.abs(this.seed * 16807 % 2147483647);
@@ -206,7 +228,8 @@ var app=new Vue({
             //true if all the empty tiles have at least one possible value;
             //Is a misnomer, as it doesn't guarantees that can actually be solved.
 	        for (let i = 0; i < board.length; i++){
-		        if (board[i] && board[i].hasOwnProperty("size") && board[i].size === 0) return false
+                if (board[i] === undefined) return false
+		        if (Set.prototype.isPrototypeOf(board[i]) && board[i].size == 0) return false
 	        }
 	        return true
         },
@@ -236,14 +259,15 @@ var app=new Vue({
                                 index = i
                             }
                         }
-                    }
-                    if (min == 10 ){
-                        return board
-                    }                    
+                        if(board[i]==undefined){ //some bug catching
+                            console.log(i, board, stack)
+                            return null
+                        }
+                    }  
                     if (min == 1){
                         this.put (board, index, [...board[index]][0])
 			        }else{
-                        //if there's more than one possible values, stack the state and pick one at random
+                        //if there's more than one possible values, pick one at random and stack the state
 				        let values = new Set( board[index] )
 				        let myValue = this.pickOne( values )
                         let oldBoard = Array.from(board, (x)=> (this.isValid(x) ? x : new Set(x) ) )
@@ -254,15 +278,16 @@ var app=new Vue({
                 //we're in an invalid state; back to last choice
 		        do{
                     var undo = stack.pop()
+                    if (undo && undo.values.size == 0) console.log( "unstacking")
                 } while(undo && undo.values.size == 0) //unstack all the finished alternatives
-                if (undo === undefined ) { //options exhausted
+                if (undo === undefined  ) { //options exhausted
                     //console.log("Can't be solved")
                     return null
                 }                
                 board = undo.board
 		        let myValue = this.pickOne(undo.values)
                 this.put (board, undo.index, myValue)
-		        stack.push(undo)
+		        stack.push(undo) //in case options are not exausted for this place
 	        }
 	        return board
         },
@@ -277,12 +302,7 @@ var app=new Vue({
                     let min=10
                     let index =-1
                     for (let i=0 ; i < 81 ; i++){
-                        //select next index
-                        if(board[i]==undefined){
-                            console.log("undefined")
-                            return null
-                        }
-                        
+                        //select next index                        
                         if ( !this.isValid(board[i] )) {
                             if (board[i] != undefined && board[i].size < min ){
                                 min = board[i].size
