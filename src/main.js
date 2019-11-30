@@ -1,27 +1,29 @@
-//todo: split logic and presentation is it worth it??
-
-const text = {
-    en:{},
-    es:{
-        "Continue": "Continuar",
-        "Restart":  "Reiniciar",
-        "New Game": "Juego Nuevo",
-        "Options":  "Opciones",
-        "Easy":     "Fácil",
-        "Medium":   "Medio",
-        "Hard":     "Difícil",
-        "Extreme":  "Extremo",
-        "Back":     "Volver",
-        "Cancel":   "Cancelar",
-        "Music":    "Música",
-        "Allow Help":"Permitir Ayuda",
-        "Well Done!":"Bien Hecho!",
-    },
+const Text = {
+    install(Vue, options){
+        Vue.Text ={
+            en:{},
+            "es-AR":{
+                "Continue": "Continuar",
+                "Restart":  "Reiniciar",
+                "New Game": "Juego Nuevo",
+                "Options":  "Opciones",
+                "Easy":     "Fácil",
+                "Medium":   "Medio",
+                "Hard":     "Difícil",
+                "Extreme":  "Extremo",
+                "Back":     "Volver",
+                "Cancel":   "Cancelar",
+                "Music":    "Música",
+                "Allow Help":"Permitir Ayuda",
+                "Well Done!":"Bien Hecho!",
+            },
+        }
+    }
 }
 
 const ls = window.localStorage
 const lang = (navigator.languages && navigator.languages.length)? navigator.languages[0]:
-     navigator.userLanguage || navigator.language || navigator.browserLanguage || 'en';
+     navigator.userLanguage || navigator.language || navigator.browserLanguage || 'es';
 
 let data= {
     playAudio:true,
@@ -60,6 +62,7 @@ for (let prop of Object.keys(data)){
     };
 }
 
+Vue.use(Text)
 
 var app=new Vue({
     el:"#sudoku-game",
@@ -83,8 +86,11 @@ var app=new Vue({
             return val && has
         },
         t(string){
-            if (text[this.locale][string]) return text[this.locale][string]
-            console.log ("missing ("+this.locale+"): '"+string+"'")
+            try{
+                if (Vue.Text[this.locale][string]) return Vue.Text[this.locale][string]
+            }catch(e){
+                console.log ("missing ("+this.locale+"): '"+string+"'")
+            }
             return string
         },
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
