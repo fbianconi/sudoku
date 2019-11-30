@@ -24,10 +24,11 @@
             <div id="menu" :class="{hide: !showmenu }">
                 <div id="mainmenu" :class="[{hide: menu != 'main' }, 'center']" >
                     <header>BA5NA Sudoku</header>
-                    <a v-if="canResume" v-on:click="resume" >{{t('Continue')}}</a>
                     <a v-if="canReset" v-on:click="reset" >{{t('Restart')}}</a>
                     <a v-on:click="menu = 'newgame'">{{t('New Game')}}</a>
                     <a v-on:click="menu = 'options'">{{t('Options')}}</a>
+                    <div class="push"></div>
+                    <a v-if="canResume" v-on:click="resume" >{{t('Continue')}}</a>
                     <!-- <a on-click="window.close()">{{t('Exit</a> -->
                 </div>
                 <div id="gamemenu" :class="[{hide: menu != 'newgame' }, 'center']" >
@@ -43,6 +44,7 @@
                     <header>{{t('Options')}}</header>
                     <a :class="['toggle', {active: helpAllowed}]" v-on:click="helpAllowed = !helpAllowed" >{{t('Allow Help')}}</a>
                     <a :class="['toggle', {active: playAudio}]" v-on:click="playAudio = !playAudio" >{{t('Music')}}</a>
+                    <!-- <a :class="['toggle', {active: playAudio}]" v-on:click="playAudio = !playAudio" >{{t('Language')}}</a> -->
                     <div class="push"></div>
                     <a v-on:click="menu = 'main'" >{{t('Back')}}</a>
                 </div>
@@ -53,7 +55,7 @@
                      :class="{highlighted: selected==item, 
                             default: begin[i]==item, 
                             hint: hint==i,
-                            noteselect: notes[i].has(selected) && !isValid(item)}"
+                            noteselect: ns(i) }"
                      v-on:click="play">
                     {{ isValid(item)? item : "" }}
                     <span v-if="notes[i].size && !isValid(item)" class="note">

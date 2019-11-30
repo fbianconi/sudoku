@@ -20,10 +20,13 @@ const text = {
 }
 
 const ls = window.localStorage
+const lang = (navigator.languages && navigator.languages.length)? navigator.languages[0]:
+     navigator.userLanguage || navigator.language || navigator.browserLanguage || 'en';
+
 let data= {
     playAudio:true,
     showmenu: true,
-    locale:"es",
+    locale: lang,
     menu: 'newgame',
     canResume: false,
     canReset: false,
@@ -74,6 +77,11 @@ var app=new Vue({
         }
     },
     methods: {
+        ns(i){
+            let val= !this.isValid(this.databoard[i])
+            let has= this.notes[i].has? this.notes[i].has(this.selected):false
+            return val && has
+        },
         t(string){
             if (text[this.locale][string]) return text[this.locale][string]
             console.log ("missing ("+this.locale+"): '"+string+"'")
@@ -82,27 +90,26 @@ var app=new Vue({
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
         column(n){return n % 9+1} ,
         row(n){return ~~(n / 9)+1} ,
-        // select(n){this.selected=n},
         resume(){if (this.canResume) this.showmenu=false } ,
-        reset(){
-            if (this.canReset){
+        reset(){if (this.canReset) this.newGame("reset")},
+        newGame(n){
+            if (n === "reset"){
+                this.notes=Array.from({length: 81}, () => new Set())
                 this.databoard= Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9]))
                 for (let i =0;i<81;i++){
                     if (this.isValid(this.begin[i]))this.put(this.databoard, i, this.begin[i])
                 }
-                this.showmenu=false
+            }else{
+                this.notes=Array.from({length: 81}, () => new Set())
+                this.begin=[]
+                this.databoard=this.newBoard(n)
+                this.begin=this.databoard.map( (x)=> (this.isValid(x) ? x : "" ) )
+                this.startTime=new Date() //TODO: implement pauses?
+                this.pausedTime=null
             }
-        },
-        newGame(n){
-            this.notes=Array(81).fill(()=> new Set() )
-            this.begin=[]
-            this.databoard=this.newBoard(n)
-            this.begin=this.databoard.map( (x)=> (this.isValid(x) ? x : "" ) )
             this.canResume=true;
             this.canReset= false
             this.selected=null;
-            this.startTime=new Date() //TODO: implement pauses?
-            this.pausedTime=null
             this.finishedTime=null
             this.finished=null
             this.showmenu=false
@@ -139,9 +146,9 @@ var app=new Vue({
             this.canResume=false;
             this.finished=new Date();
             this.selected=null;
+            //TODO: congratulation and scoreboards
             this.menu="newgame"
             setTimeout( ()=>this.showmenu=true , 2000 )
-            
         },
         random(){
             this.seed = Math.abs(this.seed * 16807 % 2147483647);
@@ -182,18 +189,20 @@ var app=new Vue({
                 //discard redo operations
                 this.undoList.splice(this.undoIndex, this.undoList.length)
             }
-            // let last = this.undoList[this.undoIndex]
-            // if (last.index==index && last.value == value){
-            //     //operation is the same as last, just discard it??
-            //     this.undoList.pop()
-            // }else{
-            this.undoList.push({index:index, value:value})                
-            // }   
+            //todo: 
+            this.undoList.push({index:index, value:value})   
             this.undoIndex = this.undoList.length                            
         },
-        undo(){
-            if (this.undoIndex>0){
-                let undo = this.undoList[--this.undoIndex]
+        _do(direction){
+            if (direction > 0 &&  this.undoIndex < this.undoList.length){
+                this.undoIndex++
+                var undo = this.undoList[this.undoIndex]
+            }
+            if (direction < 0 &&  this.undoIndex > 0){
+                this.undoIndex--
+                undo = this.undoList[this.undoIndex]
+            }
+            if(undo){
                 if (this.databoard[undo.index]==undo.value){
                     this.$set(this.databoard, undo.index, "")
                     this.remove(this.databoard, undo.index)
@@ -203,18 +212,9 @@ var app=new Vue({
                 }
             }
         },
-        redo(){
-            if ( this.undoIndex != this.undoList.length){
-                let redo = this.undoList[this.undoIndex++]
-                if (this.databoard[redo.index]==redo.value){
-                    this.$set(this.databoard, redo.index, "")
-                    this.remove(this.databoard, redo.index)
-                }else if (!this.isValid(this.databoard[redo.index])){
-                    this.$set(this.databoard, redo.index, redo.value)
-                    this.put(this.databoard, redo.index, redo.value, this.helpAllowed)                    
-                }
-            }
-        },
+        undo(){this._do(-1)},
+        redo(){this._do(+1)},
+        
         put(board, index, value, helpAllowed, interactive){
             //put a value to the board if the state admits it, or if help is disabled
             //tile should contain an array of possible values; or a number if it's been filled
@@ -245,6 +245,7 @@ var app=new Vue({
             return true;
         },
         remove(board, index){
+            //TODO: maybe there's a better way for this.
 	        let myBoard = Array.from({length: 81}, e => new Set([1,2,3,4,5,6,7,8,9]) )
 	        for(let x = 0; x < board.length; x++) {
 		        if( this.isValid(board[x]) && x != index ) this.put( myBoard, x, board[x] )
@@ -262,8 +263,7 @@ var app=new Vue({
             //true if all the empty tiles have at least one possible value;
             //Is a misnomer, as it doesn't guarantees that can actually be solved.
 	        for (let i = 0; i < board.length; i++){
-                if (board[i] === undefined) return false
-		        if (Set.prototype.isPrototypeOf(board[i]) && board[i].size == 0) return false
+                if (board[i] === undefined || (Set.prototype.isPrototypeOf(board[i]) && board[i].size == 0)) return false
 	        }
 	        return true
         },
@@ -330,7 +330,7 @@ var app=new Vue({
 	        return board
         },
         isUnique(someBoard, solution){
-            //backtrack solver (check every solution)
+            //backtrack solver (check every solution version)
             let board = someBoard.map( (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
                 stack = [] //private undo stack
             if (solution == null) return false
@@ -354,8 +354,7 @@ var app=new Vue({
 			        }else{
                         //if there's more than one possible values, stack the state and use the next
 				        let values = new Set( board[index] )
-				        let myValue = [...values][0]
-                        values.delete(myValue)
+                        let myValue = this.pickOne( values )
                         let oldBoard = board.map( (x) => (this.isValid(x) ? x : new Set(x) ) )
 				        stack.push( {index:index, values:values, board: oldBoard})
                         this.put (board, index, myValue)
@@ -374,8 +373,7 @@ var app=new Vue({
                     return this.isSolved(board) // we've checked everything and didn't bailed yet
                 }                
                 board = undo.board
-		        let myValue = [...undo.values][0]
-                undo.values.delete(myValue)
+                let myValue = this.pickOne( undo.values )
                 this.put (board, undo.index, myValue)
 		        stack.push(undo)
 	        } while(stack.length != 0)
