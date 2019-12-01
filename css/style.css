@@ -1,4 +1,5 @@
 body{
+    background:#fff;
     margin:0;
     overflow:hidden;
 }
@@ -8,10 +9,16 @@ body{
     user-select:none;
     box-sizing:border-box;
 }
+
+*[v-cloak] {
+  display: none !important;
+}
+
 #menu{
     overflow: hidden;
     z-index: 10;
 }
+
 #menu>*, #menu{
     background:#f3db21;
     color:#111;
@@ -19,6 +26,7 @@ body{
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     transition: left .5s;
 }
 #menu.hide{left:-200vw;}
@@ -76,6 +84,7 @@ body{
     display:flex;
     width:100vw;
     height:100vh;
+    height: calc(var(--vh, 1vh) * 100);
     overflow: hidden;
 }
 
@@ -104,7 +113,9 @@ body{
 @media screen and (orientation:landscape) {
     #board{
         width: 100vh;
+        width: calc(var(--vh, 1vh) * 100);
         height: 100vh;
+        height: calc(var(--vh, 1vh) * 100);
     }
     #board [data-index]{
         font-size: 7vh;

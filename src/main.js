@@ -1,29 +1,39 @@
-const Text = {
-    install(Vue, options){
-        Vue.Text ={
-            en:{},
-            "es-AR":{
-                "Continue": "Continuar",
-                "Restart":  "Reiniciar",
-                "New Game": "Juego Nuevo",
-                "Options":  "Opciones",
-                "Easy":     "Fácil",
-                "Medium":   "Medio",
-                "Hard":     "Difícil",
-                "Extreme":  "Extremo",
-                "Back":     "Volver",
-                "Cancel":   "Cancelar",
-                "Music":    "Música",
-                "Allow Help":"Permitir Ayuda",
-                "Well Done!":"Bien Hecho!",
-            },
-        }
-    }
+const Text ={
+    en:{
+        
+    },
+    es:{
+        "Continue": "Continuar",
+        "Restart":  "Reiniciar",
+        "New Game": "Juego Nuevo",
+        "Options":  "Opciones",
+        "Easy":     "Fácil",
+        "Medium":   "Medio",
+        "Hard":     "Difícil",
+        "Extreme":  "Extremo",
+        "Back":     "Volver",
+        "Cancel":   "Cancelar",
+        "Music":    "Música",
+        "Allow Help":"Permitir Ayuda",
+        "Well Done!":"Bien Hecho!",
+        'How to play': "Cómo se Juega",
+        'The objective of the game is to fill the whole board with numbers.': "El objetivo del juego es rellenar el tablero de números.",
+        'Numbers can not repeat along the same row, column, or group.': "Los números no pueden repetirse en la misma fila, columna o grupo."
+    },
 }
 
 const ls = window.localStorage
-const lang = (navigator.languages && navigator.languages.length)? navigator.languages[0]:
-     navigator.userLanguage || navigator.language || navigator.browserLanguage || 'es';
+const [lang, variant] = ((navigator.languages && navigator.languages.length)? navigator.languages[0]:
+              navigator.userLanguage || navigator.language || navigator.browserLanguage || 'es-AR').split("-");
+
+
+// https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+let vh = window.innerHeight * 0.01;
+document.documentElement.style.setProperty('--vh', `${vh}px`);
+window.addEventListener('resize', () => {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+});
 
 let data= {
     playAudio:true,
@@ -62,8 +72,6 @@ for (let prop of Object.keys(data)){
     };
 }
 
-Vue.use(Text)
-
 var app=new Vue({
     el:"#sudoku-game",
     data:data,
@@ -86,11 +94,8 @@ var app=new Vue({
             return val && has
         },
         t(string){
-            try{
-                if (Vue.Text[this.locale][string]) return Vue.Text[this.locale][string]
-            }catch(e){
-                console.log ("missing ("+this.locale+"): '"+string+"'")
-            }
+            if (Text[this.locale][string]) return Text[this.locale][string]
+            console.log ("missing ("+this.locale+"): '"+string+"'")
             return string
         },
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
@@ -170,16 +175,22 @@ var app=new Vue({
                 if(this.annotate){
                     this.notes[i].has(sel) ? this.notes[i].delete(sel) : this.notes[i].add(sel)
                     this.$set(this.notes, i, this.notes[i])
+                    this.addToUndo({type: "note", index:i, sel:sel})
                     return
                 }
                 if ( val == sel){ //already there, remove it
                     this.remove(this.databoard, i)
                     this.$set(this.databoard, i, this.databoard[i])
-                    this.addToUndo(i, sel)
+                    this.addToUndo({type:"number", index:i, sel:sel } )
                 }else if (! this.isValid(val) ){ // cell is empty
+                    let notes = this.notes.map((x)=>new Set(x)) 
                     if (this.put(this.databoard, i, sel, this.helpAllowed, true)){
                         this.$set(this.databoard, i, this.databoard[i])
-                        this.addToUndo(i, sel)
+                        let notediff=[]
+                        for (let i=0;i<81;i++){
+                            if (notes[i].has(sel)!= this.notes[i].has(sel) )notediff.push(i)
+                        }
+                        this.addToUndo({type: "number", index:i, sel:sel, notes:notediff} )
                         this.canReset=true
                     }
                 }
@@ -190,32 +201,42 @@ var app=new Vue({
                 this.endGame()
             }
         },
-        addToUndo(index, value){
+        addToUndo(undo){
             if (this.undoIndex != this.undoList.length){
                 //discard redo operations
                 this.undoList.splice(this.undoIndex, this.undoList.length)
             }
-            //todo: 
-            this.undoList.push({index:index, value:value})   
+            this.undoList.push(undo)   
             this.undoIndex = this.undoList.length                            
         },
         _do(direction){
             if (direction > 0 &&  this.undoIndex < this.undoList.length){
-                this.undoIndex++
                 var undo = this.undoList[this.undoIndex]
-            }
-            if (direction < 0 &&  this.undoIndex > 0){
+                this.undoIndex++
+            }else if (direction < 0 &&  this.undoIndex > 0){
                 this.undoIndex--
                 undo = this.undoList[this.undoIndex]
+            }else{
+                return
             }
-            if(undo){
-                if (this.databoard[undo.index]==undo.value){
-                    this.$set(this.databoard, undo.index, "")
+            console.log(undo)
+            if(undo.type == "number"){
+                if (this.databoard[undo.index] == undo.sel){ //has the exact number
                     this.remove(this.databoard, undo.index)
-                }else if (!this.isValid(this.databoard[undo.index])){
-                    this.$set(this.databoard, undo.index, undo.value)
-                    this.put(this.databoard, undo.index, undo.value, this.helpAllowed)                    
+                    this.$set(this.databoard, undo.index, "")
+                }else if (!this.isValid(this.databoard[undo.index])){ //is empty
+                    this.put(this.databoard, undo.index, undo.sel, this.helpAllowed)                    
+                    this.$set(this.databoard, undo.index, undo.sel)
                 }
+                if (undo.notes){
+                    for (let j of undo.notes){
+                        if (this.notes[j].has(undo.sel) ){this.notes[j].delete(undo.sel)}
+                        else {(this.notes[j].add(undo.sel) )}
+                    }
+                }
+            }else if (undo.type == "note"){
+                if (this.notes[undo.index].has(undo.sel) )this.notes[undo.index].delete(undo.sel)
+                else (this.notes[undo.index].add(undo.sel) )                
             }
         },
         undo(){this._do(-1)},

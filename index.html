@@ -2,7 +2,7 @@
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel='manifest' href='/sudoku/manifest.json' />
-        <script type="text/javascript" src="src/vue.js"></script>
+        
 	    <link rel="stylesheet" type="text/css" href="/sudoku/css/style.css">
         <link rel="stylesheet" type="text/css" href="/sudoku/css/Glyphter.css">
 
@@ -19,17 +19,26 @@
         <meta name="theme-color" content="#f3db21">
     </head>
     <body>
-        <div id="sudoku-game">
-            <audio v-if="playAudio" id="audio-player" autoplay loop src="/sudoku/media/2019-06-12_-_Homework_-_David_Fesliyan.mp3" type="audio/mpeg"></audio>
+        <div id="sudoku-game" v-cloak >
+            <audio v-if="playAudio" id="audio-player" volume="0.5" muted autoplay loop src="/sudoku/media/2019-06-12_-_Homework_-_David_Fesliyan.mp3" type="audio/mpeg"></audio>
             <div id="menu" :class="{hide: !showmenu }">
                 <div id="mainmenu" :class="[{hide: menu != 'main' }, 'center']" >
                     <header>BA5NA Sudoku</header>
+                    <a v-on:click="menu = 'howto'">{{t('How to play')}}</a>
                     <a v-if="canReset" v-on:click="reset" >{{t('Restart')}}</a>
                     <a v-on:click="menu = 'newgame'">{{t('New Game')}}</a>
                     <a v-on:click="menu = 'options'">{{t('Options')}}</a>
                     <div class="push"></div>
                     <a v-if="canResume" v-on:click="resume" >{{t('Continue')}}</a>
                     <!-- <a on-click="window.close()">{{t('Exit</a> -->
+                </div>
+                <div id="howtomenu" :class="[{hide: menu != 'howto' }, 'center']" >
+                    <!-- TODO: complete this explanation -->
+                    <header>How to play BA5NA Sudoku</header>
+                    <p>{{t('The objective of the game is to fill the whole board with numbers.')}}<br/>
+                        {{t('Numbers can not repeat along the same row, column, or group.')}}</p>
+                    <div class="push"></div>
+                    <a v-on:click="menu = 'main'" >{{t('Back')}}</a>
                 </div>
                 <div id="gamemenu" :class="[{hide: menu != 'newgame' }, 'center']" >
                     <header>{{t('New Game')}}</header>
@@ -76,8 +85,9 @@
                 <div v-on:click="showmenu = true" class="icon-menu"></div>
             </div>
             <div class="push"></div>
-            <div id="adsenseOrSomething"></div>
+            <div id="adsense"></div>
         </div>
+        <script type="text/javascript" src="src/vue.js"></script>
         <script src="src/main.js" type="text/javascript"></script>
     </body>
 </html>
