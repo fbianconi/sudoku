@@ -64,6 +64,7 @@
                      :class="{highlighted: selected==item, 
                             default: begin[i]==item, 
                             hint: hint==i,
+                            warn: (column(i)==warningCol||row(i)==warningRow||group(i)==warningGrp),
                             noteselect: ns(i) }"
                      v-on:click="play">
                     {{ isValid(item)? item : "" }}

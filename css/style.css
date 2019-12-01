@@ -182,6 +182,16 @@ body{
     50% {background-color: red;}
 }
 
+#board .warn{
+    animation-name: warner;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+}
+@keyframes warner {
+    50% {background-color: orange;}
+}
+
+
 #board .note {
     display: grid;
     grid-template: repeat(3, 1fr) / repeat(3, 1fr);

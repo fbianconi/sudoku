@@ -56,7 +56,10 @@ let data= {
     finishedTime:null,
     helpAllowed:true,
     digitFirst:true,
-    hint:-1
+    hint:-1,
+    warningCol:-1,
+    warningRow:-1,
+    warningGrp:-1,
 }
 
 //autosave state
@@ -192,6 +195,15 @@ var app=new Vue({
                         }
                         this.addToUndo({type: "number", index:i, sel:sel, notes:notediff} )
                         this.canReset=true
+                    }else{
+                        this.warningGrp = el.dataset.grp
+                        this.warningRow = el.dataset.row
+                        this.warningCol = el.dataset.col
+                        setTimeout( ()=>{
+                            this.warningCol=-1
+                            this.warningGrp=-1
+                            this.warningRow=-1
+                        }, 1000)
                     }
                 }
                 // else if (val != '' ){//there's other value there, switch it??                    
@@ -223,10 +235,10 @@ var app=new Vue({
             if(undo.type == "number"){
                 if (this.databoard[undo.index] == undo.sel){ //has the exact number
                     this.remove(this.databoard, undo.index)
-                    this.$set(this.databoard, undo.index, "")
+                    this.$set(this.databoard, undo.index, this.databoard[undo.index])
                 }else if (!this.isValid(this.databoard[undo.index])){ //is empty
                     this.put(this.databoard, undo.index, undo.sel, this.helpAllowed)                    
-                    this.$set(this.databoard, undo.index, undo.sel)
+                    this.$set(this.databoard, undo.index, this.databoard[undo.index])
                 }
                 if (undo.notes){
                     for (let j of undo.notes){
