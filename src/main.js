@@ -196,14 +196,7 @@ var app=new Vue({
                         this.addToUndo({type: "number", index:i, sel:sel, notes:notediff} )
                         this.canReset=true
                     }else{
-                        this.warningGrp = el.dataset.grp
-                        this.warningRow = el.dataset.row
-                        this.warningCol = el.dataset.col
-                        setTimeout( ()=>{
-                            this.warningCol=-1
-                            this.warningGrp=-1
-                            this.warningRow=-1
-                        }, 1000)
+                        this.warn(i)
                     }
                 }
                 // else if (val != '' ){//there's other value there, switch it??                    
@@ -212,6 +205,33 @@ var app=new Vue({
             if( this.isSolved(this.databoard) ){
                 this.endGame()
             }
+        },
+        warn(index){
+            let col = index % 9
+            let row = ~~(index / 9)
+            let gc = ~~(col / 3)
+            let gr = ~~(row / 3)
+            for (let j = 0 ; j < 9 ; j++) {
+                let c = j * 9 + col
+                let r = row * 9 + j
+                let gx = j % 3
+                let gy = ~~(j / 3)
+                let g = 3 * gc + gx + 27 * gr + 9 * gy
+                if (this.databoard[c]==this.selected ){
+                    this.warningCol = this.column(index)
+                }
+                if (this.databoard[g]==this.selected ){
+                    console.log("warn grp ", this.warningGrp)
+                }
+                if (this.databoard[r]==this.selected ){
+                    console.log("warn row ", row)
+                }
+            }
+            setTimeout( ()=>{
+                this.warningCol=-1
+                this.warningGrp=-1
+                this.warningRow=-1
+            }, 1000)
         },
         addToUndo(undo){
             if (this.undoIndex != this.undoList.length){
