@@ -221,10 +221,10 @@ var app=new Vue({
                     this.warningCol = this.column(index)
                 }
                 if (this.databoard[g]==this.selected ){
-                    console.log("warn grp ", this.warningGrp)
+                    this.warningGrp = this.group(index)
                 }
                 if (this.databoard[r]==this.selected ){
-                    console.log("warn row ", row)
+                    this.warningRow = this.row(index)
                 }
             }
             setTimeout( ()=>{
