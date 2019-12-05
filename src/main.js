@@ -1,24 +1,45 @@
 const Text ={
-    en:{
-        
-    },
     es:{
-        "Continue": "Continuar",
-        "Restart":  "Reiniciar",
-        "New Game": "Juego Nuevo",
-        "Options":  "Opciones",
-        "Easy":     "Fácil",
-        "Medium":   "Medio",
-        "Hard":     "Difícil",
-        "Extreme":  "Extremo",
-        "Back":     "Volver",
-        "Cancel":   "Cancelar",
-        "Music":    "Música",
-        "Allow Help":"Permitir Ayuda",
-        "Well Done!":"Bien Hecho!",
-        'How to play': "Cómo se Juega",
-        'The objective of the game is to fill the whole board with numbers.': "El objetivo del juego es rellenar el tablero de números.",
-        'Numbers can not repeat along the same row, column, or group.': "Los números no pueden repetirse en la misma fila, columna o grupo."
+        "Continue":
+        "Continuar",
+        "Restart":
+        "Reiniciar",
+        "New Game":
+        "Juego Nuevo",
+        "Options":
+        "Opciones",
+        "Easy":
+        "Fácil",
+        "Medium":
+        "Medio",
+        "Hard":
+        "Difícil",
+        "Extreme":
+        "Extremo",
+        "Back":
+        "Volver",
+        "Cancel":
+        "Cancelar",
+        "Music":
+        "Música",
+        "Allow Help":
+        "Permitir Ayuda",
+        "Well Done!":
+        "Bien Hecho!",
+        'How to play':
+        "Cómo se Juega",
+        'The objective of the game is to fill the whole board with numbers.':
+        "El objetivo del juego es rellenar el tablero de números.",
+        'Numbers can not repeat along the same row, column, or group.':
+        "Los números no pueden repetirse en la misma fila, columna o grupo.",
+        'To enter a number to the board, you must first select it using one of the buttons next to the board, and then tap on an empty tile.':
+        "Para ingresar un número al tablero, debes seleccionarlo primero usando los botones cercanos al tablero, y luego toca un casillero vacío.",
+        'To delete an entered number tap on it again, you can only delete the same number that is selected. You can\'t delete the numbers on the initial board.':
+        "Para eliminar un número ingresado tócalo de nuevo, sólo puedes eliminar el mismo número que está seleccionado. No puedes eliminar los números inicales del tablero",
+        'You can also make notes about where you suspect a number might end up, tap the pen icon to enter numbers in note mode, and proceed as with the numbers.':
+        "También puedes anotar donde sospechas que puede ir un número, toca el ícono que tiene un lápiz, y procede de la misma manera que con los números.",
+        'If you need to, you can reset the board, just tap the menu button and hit reset. The board will be cleared of numbers and notes, but the timer won\'t':
+        "Si lo necesitas, puedes reiniciar el tablero, toca el botón de menú y aprieta reiniciar. El tablero se limpiará, pero el reloj seguirá corriendo.",
     },
 }
 
@@ -36,6 +57,7 @@ window.addEventListener('resize', () => {
 });
 
 let data= {
+    nightMode:false,
     playAudio:true,
     showmenu: true,
     locale: lang,
@@ -52,8 +74,9 @@ let data= {
     focused:null,
     seed:637485, //start with fixed value
     startTime:null,
-    pausedTime:null,
+    ellapsedTime:null,
     finishedTime:null,
+    paused:false,
     helpAllowed:true,
     digitFirst:true,
     hint:-1,
@@ -170,6 +193,7 @@ var app=new Vue({
         },
         isFull(n){return 9==this.databoard.reduce( (count,x)=>count+(x==n), 0); },
         play(e){
+            //TODO: sort this mess out
             let el = e.target.closest("[data-index]")
             let i = el.dataset.index
             if ( !this.isValid(this.begin[i]) ){ //didn't hit a default value
@@ -195,8 +219,6 @@ var app=new Vue({
                         }
                         this.addToUndo({type: "number", index:i, sel:sel, notes:notediff} )
                         this.canReset=true
-                    }else{
-                        this.warn(i)
                     }
                 }
                 // else if (val != '' ){//there's other value there, switch it??                    
@@ -205,33 +227,6 @@ var app=new Vue({
             if( this.isSolved(this.databoard) ){
                 this.endGame()
             }
-        },
-        warn(index){
-            let col = index % 9
-            let row = ~~(index / 9)
-            let gc = ~~(col / 3)
-            let gr = ~~(row / 3)
-            for (let j = 0 ; j < 9 ; j++) {
-                let c = j * 9 + col
-                let r = row * 9 + j
-                let gx = j % 3
-                let gy = ~~(j / 3)
-                let g = 3 * gc + gx + 27 * gr + 9 * gy
-                if (this.databoard[c]==this.selected ){
-                    this.warningCol = this.column(index)
-                }
-                if (this.databoard[g]==this.selected ){
-                    this.warningGrp = this.group(index)
-                }
-                if (this.databoard[r]==this.selected ){
-                    this.warningRow = this.row(index)
-                }
-            }
-            setTimeout( ()=>{
-                this.warningCol=-1
-                this.warningGrp=-1
-                this.warningRow=-1
-            }, 1000)
         },
         addToUndo(undo){
             if (this.undoIndex != this.undoList.length){
@@ -273,11 +268,11 @@ var app=new Vue({
         },
         undo(){this._do(-1)},
         redo(){this._do(+1)},
-        
         put(board, index, value, helpAllowed, interactive){
             //put a value to the board if the state admits it, or if help is disabled
             //tile should contain an array of possible values; or a number if it's been filled
-            if (helpAllowed && (!board[index] || !board[index].has || !board[index].has(value))) return false;
+            let possible=true
+            if (helpAllowed && (!board[index] || !board[index].has || !board[index].has(value))) possible = false;
             let col = index % 9
             let row = ~~(index / 9)
             let gc = ~~(col / 3)
@@ -287,28 +282,40 @@ var app=new Vue({
                 let r = row * 9 + i
                 let gx = i % 3
                 let gy = ~~(i / 3)
-                let g = 3 * gc + gx + 27 * gr + 9 * gy  
-                if (Set.prototype.isPrototypeOf( board[c] ) ) board[c].delete(value)
-                if (Set.prototype.isPrototypeOf( board[r] ) ) board[r].delete(value) 
-                if (Set.prototype.isPrototypeOf( board[g] ) ) board[g].delete(value)
-                if (interactive){
-                    this.notes[c].delete(value)
-                    this.$set(this.notes, c,this.notes[c])
-                    this.notes[r].delete(value)
-                    this.$set(this.notes, r,this.notes[r])
-                    this.notes[g].delete(value)
-                    this.$set(this.notes, g,this.notes[g])
+                let g = 3 * gc + gx + 27 * gr + 9 * gy
+                if (possible){
+                    if (Set.prototype.isPrototypeOf( board[c] ) ) board[c].delete(value)
+                    if (Set.prototype.isPrototypeOf( board[r] ) ) board[r].delete(value) 
+                    if (Set.prototype.isPrototypeOf( board[g] ) ) board[g].delete(value)
+                    if (interactive){
+                        this.notes[c].delete(value)
+                        this.$set(this.notes, c,this.notes[c])
+                        this.notes[r].delete(value)
+                        this.$set(this.notes, r,this.notes[r])
+                        this.notes[g].delete(value)
+                        this.$set(this.notes, g,this.notes[g])
+                    }
+                }else{
+                    if (interactive){
+                        if (this.databoard[c]==this.selected ) this.warningCol = this.column(index)
+                        if (this.databoard[g]==this.selected ) this.warningGrp = this.group(index)
+                        if (this.databoard[r]==this.selected ) this.warningRow = this.row(index)
+                    }
                 }
-            }            
-            board[index]=value;
-            return true;
+            }
+            if (this.warningCol != -1 || this.warningGrp != -1 || this.warningRow != -1){
+                setTimeout( ()=>{ this.warningCol = -1; this.warningGrp = -1; this.warningRow = -1 }, 1000)
+            }
+            if(possible)board[index]=value;
+            return possible;
         },
         remove(board, index){
-            //TODO: maybe there's a better way for this.
+            //maybe there's a better way for this.
 	        let myBoard = Array.from({length: 81}, e => new Set([1,2,3,4,5,6,7,8,9]) )
 	        for(let x = 0; x < board.length; x++) {
 		        if( this.isValid(board[x]) && x != index ) this.put( myBoard, x, board[x] )
 	        }
+            //replace array in situ
             Array.prototype.splice.apply(board, [0, myBoard.length].concat(myBoard));
         },
         pickOne(aset) {
@@ -336,64 +343,11 @@ var app=new Vue({
             if (typeof n === "object" ) return false;
             return /^[1-9]$/.test(''+n)
         },
-        solve(someBoard){
-            //receive the board as parameter, we don't want to show how we put it together,
-            //backtrack depth-first solver (return first solution)
-            let board = Array.from(someBoard, (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
-                stack = [] //private undo stack
-	        while (!this.isSolved(board)){
-		        while(this.isSolvable(board)) {
-                    let min=10
-                    let index =-1
-                    for (let i=0;i<81;i++){
-                        if(board[i] && !this.isValid( board[i] )) {
-                            if (board[i].size != undefined && board[i].size < min ){
-                                min = board[i].size
-                                index = i
-                            }
-                        }
-                        if(board[i]==undefined){ //some bug catching
-                            console.log(i, board, stack)
-                            return null
-                        }
-                    }
-                    if (min == 10){
-                        // isSolvable( solved_board ) == true    wouldn't leave inner loop
-                        return board
-                    }
-                    if (min == 1){
-                        this.put (board, index, [...board[index]][0])
-			        }else{
-                        //if there's more than one possible values, pick one at random and stack the state
-				        let values = new Set( board[index] )
-				        let myValue = this.pickOne( values )
-                        let oldBoard = Array.from(board, (x)=> (this.isValid(x) ? x : new Set(x) ) )
-				        stack.push( {index:index, values:values, board: oldBoard})
-                        this.put (board, index, myValue)
-			        }
-		        }
-                //we're in an invalid state; back to last choice
-		        do{
-                    var undo = stack.pop()
-                    // if (undo && undo.values.size == 0) console.log( "unstacking")
-                } while(undo && undo.values.size == 0) //unstack all the finished alternatives
-                if (undo === undefined  ) { //options exhausted
-                    //console.log("Can't be solved")
-                    return null
-                }                
-                board = undo.board
-		        let myValue = this.pickOne(undo.values)
-                this.put (board, undo.index, myValue)
-		        stack.push(undo) //in case options are not exausted for this place
-	        }
-	        return board
-        },
+        solve(someBoard){return this.isUnique(someBoard)},
         isUnique(someBoard, solution){
             //backtrack solver (check every solution version)
             let board = someBoard.map( (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
                 stack = [] //private undo stack
-            if (solution == null) return false
-
 	        do{
 		        while(this.isSolvable(board) && !this.isSolved(board)) {
                     let min=10
@@ -420,8 +374,12 @@ var app=new Vue({
 			        }
 		        }
                 if (this.isSolved(board)){
-                    for (let i =0; i<81;i++){
-                        if (board[i]!=solution[i]) return false
+                    if (solution){
+                        for (let i =0; i<81;i++){
+                            if (board[i]!=solution[i]) return false
+                        }
+                    }else{ //if invoqued without solution we're meant to solve it
+                        return board 
                     }
                 }
                 //back to last choice
@@ -430,24 +388,13 @@ var app=new Vue({
                 }while(undo && undo.values.size==0) //unstack all the finished alternatives
                 if (undo === undefined ) { //options exhausted
                     return this.isSolved(board) // we've checked everything and didn't bailed yet
-                }                
+                }               
                 board = undo.board
                 let myValue = this.pickOne( undo.values )
                 this.put (board, undo.index, myValue)
 		        stack.push(undo)
 	        } while(stack.length != 0)
             return true
-        },
-        removeRandomOne(board){
-            let candidates = new Set()
-            for (let i = 0 ; i< board.length ; i++){
-                if ( this.isValid(board[i]) ) {
-                    candidates.add(i)
-                }
-            }
-            let index = this.pickOne(candidates)
-            this.remove(board, index)
-            return index
         },
         showHint(board){
             let solvable = true;
@@ -457,17 +404,24 @@ var app=new Vue({
 		        if (!this.isValid(board[i]) && board[i].size===1) index=i;
 	        }
             if (!solvable){
-                alert("Not solvable")
+                console.log("Not solvable")
             }
             if (index >=0 ){
                 this.hint = index
                 setTimeout( () => this.hint = -1 , 4000 )
-                //console.log("hint: ",index)
             }
         }        
     },
     watch: watch
 })
+
+// document.body.onblur=function(e){
+//     //todo: implement pauses
+//     console.log('body.blur');
+// }
+// document.body.onfocus=function(e){
+//     console.log('body.focus');
+// }
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
@@ -480,6 +434,4 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
-
-
 
