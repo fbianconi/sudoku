@@ -39,14 +39,16 @@
 
     --board-border: #aaa;
     --board-fg: #ddd;
-    --board-grp-bg:#003;
-    --board-grp-df-bg: #003;
+    --board-grp-bg:#002;
+    --board-grp-df-bg: #002;
     --board-df-bg: #000;
     --board-df-fg:#aaa;
 
-    --highlight-bg:#023;
-    --highlight-note-bg:#033;
-    --focused:#023;
+    --highlight-bg:#060;
+    --highlight-fg:#FFF;
+    --highlight-note-bg:#150;
+    --highlight-note-fg:#fff;
+    --focused:#400;
 
     --hint-color:#F00;
     --warn-color:#FA0;
@@ -56,9 +58,9 @@
     --controls-border:#000;
 
     --controls-selected:#422;
-    --controls-done-bg:#555;
-    --controls-done-fg:#FFF;
-    --adsense:#ddd;
+    --controls-done-bg:#444;
+    --controls-done-fg:#aaa;
+    --adsense:#000;
 }
 
 
@@ -161,7 +163,6 @@ body{
     overflow: hidden;
     background:#fff;
     background:var(--color-bg, #fff);
-
 }
 
 @media screen and (orientation:portrait) {
@@ -305,6 +306,8 @@ body{
     cursor: default;
     border: .05em outset #fff;
     border: .05em outset var(--controls-border, #fff);
+    color: #fff;
+    color: var(--controls-fg, #fff);
     margin: 2px;
     border-radius: 8px;
     background-color: #eee;

@@ -119,16 +119,23 @@ var app=new Vue({
             let has= this.notes[i].has? this.notes[i].has(this.selected):false
             return val && has
         },
+
         t(string){
             if (Text[this.locale][string]) return Text[this.locale][string]
             console.log ("missing ("+this.locale+"): '"+string+"'")
             return string
         },
+
         group(n){return ( ~~(n/3)%3 + 3*(~~(n/27)))+1 } ,
+
         column(n){return n % 9+1} ,
+
         row(n){return ~~(n / 9)+1} ,
+
         resume(){if (this.canResume) this.showmenu=false } ,
+
         reset(){if (this.canReset) this.newGame("reset")},
+
         newGame(n){
             if (n === "reset"){
                 this.notes=Array.from({length: 81}, () => new Set())
@@ -157,6 +164,7 @@ var app=new Vue({
             this.focused=null
             this.hint=-1
         },
+
         newBoard(n){
             //start with a filled (solved) board 
             let board = this.solve( Array.from({length: 81}, () => new Set([1,2,3,4,5,6,7,8,9] )) )
@@ -179,6 +187,7 @@ var app=new Vue({
             }
             return board
         },
+
         endGame(){
             this.canResume=false;
             this.finished=new Date();
@@ -187,11 +196,14 @@ var app=new Vue({
             this.menu="newgame"
             setTimeout( ()=>this.showmenu=true , 2000 )
         },
+
         random(){
             this.seed = Math.abs(this.seed * 16807 % 2147483647);
             return (this.seed - 1) / 2147483646
         },
+
         isFull(n){return 9==this.databoard.reduce( (count,x)=>count+(x==n), 0); },
+
         play(e){
             //TODO: sort this mess out
             let el = e.target.closest("[data-index]")
@@ -228,6 +240,7 @@ var app=new Vue({
                 this.endGame()
             }
         },
+
         addToUndo(undo){
             if (this.undoIndex != this.undoList.length){
                 //discard redo operations
@@ -236,6 +249,7 @@ var app=new Vue({
             this.undoList.push(undo)   
             this.undoIndex = this.undoList.length                            
         },
+
         _do(direction){
             if (direction > 0 &&  this.undoIndex < this.undoList.length){
                 var undo = this.undoList[this.undoIndex]
@@ -268,6 +282,7 @@ var app=new Vue({
         },
         undo(){this._do(-1)},
         redo(){this._do(+1)},
+
         put(board, index, value, helpAllowed, interactive){
             //put a value to the board if the state admits it, or if help is disabled
             //tile should contain an array of possible values; or a number if it's been filled
@@ -309,6 +324,7 @@ var app=new Vue({
             if(possible)board[index]=value;
             return possible;
         },
+
         remove(board, index){
             //maybe there's a better way for this.
 	        let myBoard = Array.from({length: 81}, e => new Set([1,2,3,4,5,6,7,8,9]) )
@@ -318,6 +334,7 @@ var app=new Vue({
             //replace array in situ
             Array.prototype.splice.apply(board, [0, myBoard.length].concat(myBoard));
         },
+
         pickOne(aset) {
             //Selects random item from set, delete it from the set and return it; like a random Array.pop()
 	        let idx = ~~(this.random() * aset.size)
@@ -325,6 +342,7 @@ var app=new Vue({
 	        aset.delete(value)
 	        return value
         },
+
         isSolvable(board){
             //true if all the empty tiles have at least one possible value;
             //Is a misnomer, as it doesn't guarantees that can actually be solved.
@@ -333,17 +351,21 @@ var app=new Vue({
 	        }
 	        return true
         },
+
         isSolved(board){
 	        for (let i=0; i<board.length; i++){
 		        if ( !this.isValid( board[i] )) return false
 	        }
 	        return true
         },
+        
         isValid(n){
             if (typeof n === "object" ) return false;
             return /^[1-9]$/.test(''+n)
         },
+        
         solve(someBoard){return this.isUnique(someBoard)},
+        
         isUnique(someBoard, solution){
             //backtrack solver (check every solution version)
             let board = someBoard.map( (x)=> (this.isValid(x) ? x : new Set(x) ) ), //2 level array clone 
@@ -396,6 +418,7 @@ var app=new Vue({
 	        } while(stack.length != 0)
             return true
         },
+        
         showHint(board){
             let solvable = true;
             let index = undefined
@@ -410,7 +433,8 @@ var app=new Vue({
                 this.hint = index
                 setTimeout( () => this.hint = -1 , 4000 )
             }
-        }        
+        }
+        
     },
     watch: watch
 })
