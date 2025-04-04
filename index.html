@@ -1,26 +1,26 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel='manifest' href='/manifest.json' />
+        <link rel='manifest' href='/sudoku/manifest.json' />
         
-        <link rel="stylesheet" type="text/css" href="/css/style.css">
-        <link rel="stylesheet" type="text/css" href="/css/Glyphter.css">
+        <link rel="stylesheet" type="text/css" href="/sudoku/css/style.css">
+        <link rel="stylesheet" type="text/css" href="/sudoku/css/Glyphter.css">
 
-        <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
-        <link rel="manifest" href="/img/site.webmanifest">
-        <link rel="mask-icon" href="/img/safari-pinned-tab.svg" color="#f3db21">
-        <link rel="shortcut icon" href="/img/favicon.ico">
+        <link rel="apple-touch-icon" sizes="180x180" href="/sudoku/img/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/sudoku/img/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/sudoku/img/favicon-16x16.png">
+        <link rel="manifest" href="/sudoku/img/site.webmanifest">
+        <link rel="mask-icon" href="/sudoku/img/safari-pinned-tab.svg" color="#f3db21">
+        <link rel="shortcut icon" href="/sudoku/img/favicon.ico">
         
         <meta charset="UTF-8">
         <meta name="msapplication-TileColor" content="#f3db21">
-        <meta name="msapplication-config" content="/img/browserconfig.xml">
+        <meta name="msapplication-config" content="/sudoku/img/browserconfig.xml">
         <meta name="theme-color" content="#f3db21">
     </head>
     <body>
         <div id="sudoku-game" v-cloak :data-theme="nightMode==true?'dark':'light'" >
-            <audio v-if="playAudio" id="audio-player" volume="0.5" muted autoplay loop src="/media/2019-06-12_-_Homework_-_David_Fesliyan.mp3" type="audio/mpeg"></audio>
+            <audio v-if="playAudio" id="audio-player" volume="0.5" muted autoplay loop src="/sudoku/media/2019-06-12_-_Homework_-_David_Fesliyan.mp3" type="audio/mpeg"></audio>
             <div id="menu" :class="{hide: !showmenu }">
                 <div id="mainmenu" :class="[{hide: menu != 'main' }, 'center']" >
                     <header>BA5NA Sudoku</header>
